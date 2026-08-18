@@ -24,8 +24,10 @@ import { PluginsSection } from './components/sections/PluginsSection';
 import { AuditLogsSection } from './components/sections/AuditLogsSection';
 import { ApiDocsSection } from './components/sections/ApiDocsSection';
 import { ProfileSettingsSection } from './components/sections/ProfileSettingsSection';
+import { WebsiteHostingWorkspace } from './components/sections/WebsiteHostingWorkspace';
 import { UserPanelSection } from './components/sections/UserPanelSection';
 import { UserManagementSection } from './components/sections/UserManagementSection';
+import { ResellerPortalSection } from './components/sections/ResellerPortalSection';
 
 const MainContent: React.FC = () => {
   const {
@@ -46,11 +48,13 @@ const MainContent: React.FC = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'overview':
-        return <DashboardOverview />;
+        return <WebsiteHostingWorkspace />;
       case 'user-panel':
         return <UserPanelSection />;
       case 'users-manager':
         return <UserManagementSection />;
+      case 'reseller-portal':
+        return <ResellerPortalSection />;
       case 'websites':
         return <WebsitesSection />;
       case 'file-manager':

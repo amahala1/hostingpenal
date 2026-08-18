@@ -1,6 +1,6 @@
 {
-  "name": "HostAdmin Control Panel",
-  "description": "Enterprise cloud hosting control panel with photo-matched cPanel User Panel grid, sub-user account creation, live VPS IP auto-detection, real-time RAM/storage telemetry, isolated phpMyAdmin, Roundcube Webmail, and multi-domain virtual hosts.",
+  "name": "My Web Hosting",
+  "description": "A clean, modern website hosting workspace to manage, edit, upload, and run your custom website files, scripts, and database.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

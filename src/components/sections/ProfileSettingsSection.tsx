@@ -9,7 +9,6 @@ import {
   Contrast,
   Volume2,
   VolumeX,
-  Smartphone,
   CheckCircle2,
   Clock,
   Laptop,
@@ -396,95 +395,61 @@ export const ProfileSettingsSection: React.FC = () => {
         </div>
       )}
 
-      {/* Tab: Security & 2FA */}
+      {/* Tab: Security */}
       {activeTab === 'security' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="ha-card p-6 space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Lock className="w-5 h-5 text-pink-600" />
-              <span>Change Master Password</span>
-            </h3>
+        <div className="max-w-xl ha-card p-6 space-y-4">
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-pink-600" />
+            <span>Change Master Password</span>
+          </h3>
 
-            <form onSubmit={handlePasswordChange} className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  value={currentPass}
-                  onChange={(e) => setCurrentPass(e.target.value)}
-                  className="ha-input"
-                  placeholder="••••••••••••"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  className="ha-input"
-                  placeholder="Min 12 characters"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  className="ha-input"
-                  placeholder="Repeat new password"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="ha-btn ha-btn-pink py-2.5 px-5 text-xs font-bold">
-                Update Master Password
-              </button>
-            </form>
-          </div>
-
-          <div className="ha-card p-6 space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-purple-600" />
-              <span>Two-Factor Authentication (TOTP)</span>
-            </h3>
-
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
-              <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>2FA Protection is Active</span>
-              </div>
-              <p className="text-[11px] text-emerald-800">
-                Google Authenticator / Authy tokens are enforced for all logins from new IP addresses.
-              </p>
+          <form onSubmit={handlePasswordChange} className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={currentPass}
+                onChange={(e) => setCurrentPass(e.target.value)}
+                className="ha-input"
+                placeholder="••••••••••••"
+                required
+              />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <button
-                onClick={() => {
-                  addToast({
-                    type: 'info',
-                    title: 'TOTP Secret Generated',
-                    message: 'New QR code rendered for authenticator app pairing.',
-                  });
-                }}
-                className="ha-btn ha-btn-white w-full py-2.5 text-xs font-bold"
-              >
-                Re-Pair Authenticator App
-              </button>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+                className="ha-input"
+                placeholder="Min 12 characters"
+                required
+              />
             </div>
-          </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={confirmPass}
+                onChange={(e) => setConfirmPass(e.target.value)}
+                className="ha-input"
+                placeholder="Repeat new password"
+                required
+              />
+            </div>
+
+            <button type="submit" className="ha-btn ha-btn-pink py-2.5 px-5 text-xs font-bold">
+              Update Master Password
+            </button>
+          </form>
         </div>
       )}
 

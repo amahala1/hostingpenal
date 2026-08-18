@@ -131,6 +131,10 @@ interface AppContextType {
   phpMyAdminModalOpen: boolean;
   setPhpMyAdminModalOpen: (open: boolean) => void;
   launchPhpMyAdmin: (dbName?: string) => void;
+  isPhpMyAdminInstalled: boolean;
+  installPhpMyAdmin: () => Promise<void>;
+  isRoundcubeInstalled: boolean;
+  installRoundcube: () => Promise<void>;
   vpsInstallerModalOpen: boolean;
   setVpsInstallerModalOpen: (open: boolean) => void;
   launchVpsInstaller: () => void;
@@ -387,24 +391,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     activeProcesses: 142,
   });
 
-  // Auto Detect IP & Hardware Metrics
+  // Server Hardware Telemetry & Metrics Update
   const detectServerIpAndMetrics = async () => {
-    try {
-      const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.ip) {
-          setNetworkTelemetry((prev) => ({
-            ...prev,
-            publicIp: data.ip,
-            autoDetected: true,
-            lastChecked: new Date().toLocaleTimeString(),
-          }));
-        }
-      }
-    } catch (e) {
-      // Fallback retains primary VPS authoritative IP
-    }
+    // Keep Authoritative VPS Server IP: 103.174.102.45 (Not Client IP)
+    setNetworkTelemetry((prev) => ({
+      ...prev,
+      publicIp: '103.174.102.45',
+      autoDetected: true,
+      lastChecked: new Date().toLocaleTimeString(),
+    }));
 
     // Calculate live disk and ram based on database, files, and services
     const filesSizeMB = files.reduce((acc, f) => acc + (f.size / (1024 * 1024)), 0);
@@ -583,6 +578,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return () => clearInterval(interval);
   }, [metrics]);
+
+  // Software Installation States
+  const [isPhpMyAdminInstalled, setIsPhpMyAdminInstalled] = useState<boolean>(false);
+  const [isRoundcubeInstalled, setIsRoundcubeInstalled] = useState<boolean>(false);
+
+  const installPhpMyAdmin = async (): Promise<void> => {
+    setIsPhpMyAdminInstalled(true);
+    triggerLivePackageInstall('phpMyAdmin v5.2.1', 'Installing phpMyAdmin Database Suite...');
+    addToast({
+      type: 'success',
+      title: 'phpMyAdmin Installation Initiated',
+      message: 'Configuring phpMyAdmin database manager on port 8443.',
+    });
+  };
+
+  const installRoundcube = async (): Promise<void> => {
+    setIsRoundcubeInstalled(true);
+    triggerLivePackageInstall('Roundcube Webmail v1.6.6', 'Installing Roundcube Webmail Engine...');
+    addToast({
+      type: 'success',
+      title: 'Roundcube Installation Initiated',
+      message: 'Configuring Roundcube IMAP/SMTP webmail suite.',
+    });
+  };
 
   // Live SSH Installation Terminal State
   const [installTerminalState, setInstallTerminalState] = useState<InstallTerminalState>({
@@ -2477,6 +2496,10 @@ class PHPMailer {
         phpMyAdminModalOpen,
         setPhpMyAdminModalOpen,
         launchPhpMyAdmin,
+        isPhpMyAdminInstalled,
+        installPhpMyAdmin,
+        isRoundcubeInstalled,
+        installRoundcube,
         vpsInstallerModalOpen,
         setVpsInstallerModalOpen,
         launchVpsInstaller,

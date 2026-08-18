@@ -5,6 +5,7 @@ export type NavSection =
   | 'overview'
   | 'user-panel'
   | 'users-manager'
+  | 'reseller-portal'
   | 'websites'
   | 'file-manager'
   | 'php-manager'

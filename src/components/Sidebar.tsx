@@ -22,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
     isVpsInstalled,
     logout,
     userProfile,
+    serverUsers,
     triggerHaptic,
     announceToScreenReader,
   } = useApp();
@@ -39,16 +40,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
   }[] = [];
 
   if (userProfile.role === 'Reseller') {
-    // Reseller Role Scope: ONLY Package Creation & User Account Creation
+    // Reseller Role Scope: Package Creation, Customer Provisioning, Pool Stats
     navGroups = [
       {
         label: 'Reseller Control Panel',
         items: [
           {
-            id: 'users-manager',
-            title: 'Package & User Account Manager',
-            badge: 'Reseller Scope',
+            id: 'reseller-portal',
+            title: 'Reseller Portal & Packages',
+            badge: 'Reseller Portal',
             badgeColor: 'ha-badge-purple',
+          },
+          {
+            id: 'users-manager',
+            title: 'Customer Sub-Accounts',
+            badge: serverUsers.length,
+            badgeColor: 'ha-badge-blue',
           },
         ],
       },
@@ -143,23 +150,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
     // Master Super Administrator Role Scope: Full VPS Server Administration
     navGroups = [
       {
-        label: 'Main Control',
+        label: 'My Website Hosting',
         items: [
           {
             id: 'overview',
-            title: 'Dashboard Overview',
+            title: 'My Website Workspace',
+            badge: 'Live Site',
+            badgeColor: 'ha-badge-emerald',
           },
           {
-            id: 'users-manager',
-            title: 'User Accounts & Reseller',
-            badge: 'Master',
-            badgeColor: 'ha-badge-purple',
-          },
-          {
-            id: 'user-panel',
-            title: 'User Panel Preview',
-            badge: 'cPanel',
+            id: 'file-manager',
+            title: 'File Manager & Code Editor',
+            badge: 'Files',
             badgeColor: 'ha-badge-blue',
+          },
+          {
+            id: 'websites',
+            title: 'Domain & SSL Status',
+            badge: domains?.length || 0,
+            badgeColor: 'ha-badge-mango',
           },
         ],
       },

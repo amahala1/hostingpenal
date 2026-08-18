@@ -12,8 +12,6 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
-  QrCode,
-  Smartphone,
   Eye,
   Sliders,
   Flame,
@@ -34,7 +32,7 @@ export const SslSecuritySection: React.FC = () => {
     triggerHaptic,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'autossl' | 'firewall' | '2fa' | 'hotlink' | 'waf'>('autossl');
+  const [activeTab, setActiveTab] = useState<'autossl' | 'firewall' | 'waf' | 'hotlink'>('autossl');
 
   // Certificate inspector modal
   const [inspectingCert, setInspectingCert] = useState<SslCertificate | null>(null);
@@ -44,9 +42,6 @@ export const SslSecuritySection: React.FC = () => {
   const [fwIp, setFwIp] = useState('');
   const [fwAction, setFwAction] = useState<'block' | 'allow' | 'rate_limit'>('block');
   const [fwReason, setFwReason] = useState('');
-
-  // 2FA Verification simulator state
-  const [totpCode, setTotpCode] = useState('');
 
   const handleIssueCert = (domain: string) => {
     triggerHaptic();
@@ -122,14 +117,6 @@ export const SslSecuritySection: React.FC = () => {
           }`}
         >
           IP Firewall & Fail2ban ({firewallRules.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('2fa')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-            activeTab === '2fa' ? 'bg-sky-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          Two-Factor Authentication (2FA)
         </button>
         <button
           onClick={() => setActiveTab('waf')}
@@ -304,85 +291,7 @@ export const SslSecuritySection: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Two-Factor Authentication */}
-      {activeTab === '2fa' && (
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="font-bold text-base text-white">Two-Factor Authentication (2FA TOTP)</h2>
-              <p className="text-xs text-slate-400">
-                Safeguard the dashboard by requiring Google Authenticator, Authy, or 1Password one-time codes on login.
-              </p>
-            </div>
-
-            <button
-              onClick={handleToggle2FA}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${
-                securitySettings.twoFactorEnforced
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                  : 'bg-slate-800 text-slate-300 hover:text-white'
-              }`}
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>{securitySettings.twoFactorEnforced ? '2FA Enforced (Enabled)' : 'Enable 2FA Protection'}</span>
-            </button>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-sky-400">Step 1: Scan Authenticator QR</div>
-              <p className="text-xs text-slate-400">
-                Scan this QR code with Google Authenticator, 1Password, or Bitwarden on your mobile device.
-              </p>
-              <div className="p-4 bg-white rounded-xl w-40 h-40 flex items-center justify-center shadow-lg">
-                <QrCode className="w-32 h-32 text-slate-950" />
-              </div>
-              <div className="font-mono text-[10px] text-slate-400 break-all">
-                Manual Secret: <span className="text-sky-300 font-bold">JBSWY3DPEHPK3PXP</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="text-xs font-semibold uppercase tracking-wider text-sky-400">Step 2: Enter 6-Digit Code</div>
-              <p className="text-xs text-slate-400">Verify synchronization by typing the current token from your authenticator app.</p>
-              <input
-                type="text"
-                placeholder="123456"
-                maxLength={6}
-                value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full text-center tracking-widest text-2xl font-bold font-mono px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-sky-500 focus:outline-none"
-              />
-              <button
-                onClick={() => {
-                  if (totpCode.length === 6) {
-                    addToast({ type: 'success', title: '2FA Token Verified', message: 'Authenticator device synced successfully.' });
-                    setTotpCode('');
-                  }
-                }}
-                disabled={totpCode.length !== 6}
-                className="w-full py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white font-semibold text-xs shadow-md"
-              >
-                Verify & Register Device
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
-              <div className="font-semibold text-white flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Security Recommendations</span>
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-slate-400 text-[11px]">
-                <li>Save emergency offline backup recovery codes</li>
-                <li>Enforce 2FA for all newly created sub-administrators</li>
-                <li>Session timeout is auto-set to 30 minutes of inactivity</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 4: Web Application Firewall (WAF) */}
+      {/* Tab 3: Web Application Firewall (WAF) */}
       {activeTab === 'waf' && (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center justify-between">

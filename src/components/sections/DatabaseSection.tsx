@@ -83,6 +83,8 @@ export const DatabaseSection: React.FC = () => {
     assignUserToDatabase,
     executeSqlQuery,
     launchPhpMyAdmin,
+    isPhpMyAdminInstalled,
+    installPhpMyAdmin,
     addToast,
     triggerHaptic,
   } = useApp();
@@ -614,6 +616,41 @@ export const DatabaseSection: React.FC = () => {
 
       {/* Tab 3: phpMyAdmin & SQL Query Runner */}
       {activeTab === 'phpmyadmin' && (
+        !isPhpMyAdminInstalled ? (
+          <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6 text-center max-w-2xl mx-auto my-6">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
+              <Server className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-white">phpMyAdmin Database Suite Not Installed</h2>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-lg mx-auto">
+                phpMyAdmin must be installed on your VPS before linking database access. Click the button below to download and configure phpMyAdmin v5.2.1 automatically.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-left text-xs space-y-2 font-mono text-slate-300">
+              <div className="flex items-center gap-2 text-teal-400 font-bold">
+                <CheckCircle2 className="w-4 h-4 text-teal-400" />
+                <span>Installation Package Specifications:</span>
+              </div>
+              <ul className="space-y-1 text-[11px] text-slate-400 pl-6 list-disc">
+                <li>Package: phpMyAdmin-5.2.1-all-languages.tar.gz</li>
+                <li>Directory Target: /usr/share/phpMyAdmin</li>
+                <li>MySQL Socket: /var/run/mysqld/mysqld.sock</li>
+                <li>Blowfish Cookie Encryption: 32-bit Auto-Generated Secret</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => installPhpMyAdmin()}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mx-auto"
+            >
+              <Download className="w-4 h-4" />
+              <span>Install phpMyAdmin (v5.2.1)</span>
+            </button>
+          </div>
+        ) : (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -725,6 +762,7 @@ export const DatabaseSection: React.FC = () => {
             </div>
           )}
         </div>
+        )
       )}
 
       {/* Tab 4: Remote MySQL Access */}

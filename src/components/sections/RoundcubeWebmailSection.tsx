@@ -42,6 +42,8 @@ export const RoundcubeWebmailSection: React.FC = () => {
     roundcubeSessionMail,
     setRoundcubeSessionMail,
     networkTelemetry,
+    isRoundcubeInstalled,
+    installRoundcube,
   } = useApp();
 
   // Webmail Login Screen State
@@ -132,7 +134,48 @@ export const RoundcubeWebmailSection: React.FC = () => {
     }, 500);
   };
 
-  // 1. Dedicated Roundcube Login Screen (Req #4: Roundcube alag page par login hona chahiye)
+  // 0. Roundcube Installation Guard
+  if (!isRoundcubeInstalled) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl shadow-xl overflow-hidden animate-in fade-in p-8 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto shadow-sm">
+            <Mail className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-black text-slate-900">Roundcube Webmail Not Installed</h2>
+            <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
+              Roundcube Webmail engine is required to read and send emails for your domain. Click below to install Roundcube v1.6.6 with Dovecot IMAP and Exim SMTP integration.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 font-mono text-slate-700">
+            <div className="flex items-center gap-2 text-indigo-900 font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Roundcube Core Components:</span>
+            </div>
+            <ul className="space-y-1 text-[11px] text-slate-600 pl-6 list-disc">
+              <li>Webmail Core: Roundcube 1.6.6 Framework</li>
+              <li>IMAP Driver: Dovecot 2.3.20 (SSL Port 993)</li>
+              <li>SMTP Mail Transfer: Exim4 TLS (Port 587)</li>
+              <li>Mail Directory: /var/www/roundcube & /var/mail</li>
+            </ul>
+          </div>
+
+          <button
+            onClick={() => installRoundcube()}
+            className="w-full ha-btn ha-btn-purple py-3 text-xs font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+          >
+            <Mail className="w-4 h-4" />
+            <span>Install Roundcube Webmail (v1.6.6)</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 1. Dedicated Roundcube Login Screen
   if (!isLoggedIn) {
     return (
       <div className="min-h-[75vh] flex items-center justify-center p-4">
