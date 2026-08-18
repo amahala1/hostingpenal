@@ -6,7 +6,6 @@ async function request(path: string, options: RequestInit = {}) {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
-
   const contentType = response.headers.get('content-type') || '';
   const data = contentType.includes('application/json') ? await response.json() : await response.text();
   if (!response.ok) {
@@ -21,15 +20,8 @@ export const hostingApi = {
   login: (username: string, password: string) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   me: () => request('/api/auth/me'),
-  provisionDomain: (
-    domain: string,
-    username: string,
-    phpSocket?: string,
-    options: { serverIp?: string; issueSsl?: boolean } = {},
-  ) => request('/api/domains/provision', {
-    method: 'POST',
-    body: JSON.stringify({ domain, username, phpSocket, ...options }),
-  }),
+  provisionDomain: (domain: string, username: string, phpSocket?: string, options: { serverIp?: string; issueSsl?: boolean } = {}) => request('/api/domains/provision', { method: 'POST', body: JSON.stringify({ domain, username, phpSocket, ...options }) }),
+  provisionSubdomain: (subdomain: string, parentDomain: string, username: string, options: { phpSocket?: string; serverIp?: string; dnsType?: 'A' | 'CNAME'; dnsTarget?: string; issueSsl?: boolean } = {}) => request('/api/domains/subdomain/provision', { method: 'POST', body: JSON.stringify({ subdomain, parentDomain, username, ...options }) }),
   updateDnsZone: (domain: string, records: unknown[]) => request('/api/dns/zones', { method: 'POST', body: JSON.stringify({ domain, records }) }),
   getDnsZone: (domain: string) => request(`/api/dns/zones/${encodeURIComponent(domain)}`),
   resolveDns: (domain: string, type = 'A') => request(`/api/dns/resolve?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`),
