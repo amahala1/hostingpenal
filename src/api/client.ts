@@ -21,11 +21,15 @@ export const hostingApi = {
   login: (username: string, password: string) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   me: () => request('/api/auth/me'),
-  provisionDomain: (domain: string, username: string, phpSocket?: string) =>
-    request('/api/domains/provision', {
-      method: 'POST',
-      body: JSON.stringify({ domain, username, phpSocket }),
-    }),
+  provisionDomain: (
+    domain: string,
+    username: string,
+    phpSocket?: string,
+    options: { serverIp?: string; issueSsl?: boolean } = {},
+  ) => request('/api/domains/provision', {
+    method: 'POST',
+    body: JSON.stringify({ domain, username, phpSocket, ...options }),
+  }),
   updateDnsZone: (domain: string, records: unknown[]) => request('/api/dns/zones', { method: 'POST', body: JSON.stringify({ domain, records }) }),
   getDnsZone: (domain: string) => request(`/api/dns/zones/${encodeURIComponent(domain)}`),
   resolveDns: (domain: string, type = 'A') => request(`/api/dns/resolve?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`),
