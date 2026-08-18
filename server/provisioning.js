@@ -3,6 +3,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { config } from './config.js';
+import { writeZone } from './dns.js';
 
 const execFileAsync = promisify(execFile);
 const domainPattern = /^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;
@@ -37,7 +38,44 @@ export function renderNginxServerBlock({ domain, username, phpSocket }) {
   return `server {\n  listen 80;\n  listen [::]:80;\n  server_name ${domain} www.${domain};\n  root ${root};\n  index index.php index.html index.htm;\n\n  location / {\n    try_files $uri $uri/ /index.php?$query_string;\n  }\n\n  location ~ \\.php$ {\n    include snippets/fastcgi-php.conf;\n    fastcgi_pass unix:${socket};\n  }\n\n  location ~ /\\.(?!well-known).* {\n    deny all;\n  }\n}\n`;
 }
 
-export async function provisionDomain({ domain, username, phpSocket }) {
+async function commandExists(command) {
+  try {
+    await execFileAsync('sh', ['-lc', `command -v ${command}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function issueLetsEncrypt(domain) {
+  if (!(await commandExists('certbot'))) {
+    return { status: 'pending', message: 'certbot is not installed; SSL provisioning is pending.' };
+  }
+  try {
+    await execFileAsync('certbot', [
+      '--nginx', '--non-interactive', '--agree-tos', '--redirect',
+      '--register-unsafely-without-email', '-d', domain, '-d', `www.${domain}`,
+    ], { timeout: 120000 });
+    return { status: 'active', message: 'Let\'s Encrypt certificate issued and HTTPS redirect enabled.' };
+  } catch (error) {
+    return { status: 'pending', message: error?.message || 'Let\'s Encrypt provisioning failed.' };
+  }
+}
+
+function defaultDnsRecords(domain, serverIp) {
+  return [
+    { name: '@', type: 'A', value: serverIp, ttl: 3600 },
+    { name: 'www', type: 'CNAME', value: domain, ttl: 3600 },
+    { name: 'mail', type: 'A', value: serverIp, ttl: 3600 },
+    { name: 'ftp', type: 'A', value: serverIp, ttl: 3600 },
+    { name: 'webmail', type: 'A', value: serverIp, ttl: 3600 },
+    { name: '@', type: 'MX', value: `mail.${domain}.`, priority: 10, ttl: 3600 },
+    { name: '@', type: 'TXT', value: `v=spf1 a mx ip4:${serverIp} ~all`, ttl: 3600 },
+    { name: '_dmarc', type: 'TXT', value: `v=DMARC1; p=none; rua=mailto:postmaster@${domain}`, ttl: 3600 },
+  ];
+}
+
+export async function provisionDomain({ domain, username, phpSocket, serverIp, issueSsl = false }) {
   validateDomain(domain);
   validateUsername(username);
   const documentRoot = getDocumentRoot(username, domain);
@@ -59,5 +97,13 @@ export async function provisionDomain({ domain, username, phpSocket }) {
   await execFileAsync(config.nginxBinary, ['-t']);
   await execFileAsync(config.nginxBinary, ['-s', 'reload']);
 
-  return { domain, username, documentRoot, nginxPath, enabled: true };
+  let dns = { status: 'skipped' };
+  if (serverIp) {
+    const zone = await writeZone(domain, defaultDnsRecords(domain, serverIp));
+    dns = { status: 'active', ...zone };
+  }
+
+  const ssl = issueSsl ? await issueLetsEncrypt(domain) : { status: 'not-requested' };
+
+  return { domain, username, documentRoot, nginxPath, enabled: true, dns, ssl };
 }
