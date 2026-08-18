@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { config } from './config.js';
 import { cookieOptions, createSession, destroySession, requireAuth, verifyMasterCredentials } from './auth.js';
 import { readZone, writeZone } from './dns.js';
+import { provisionDomain } from './provisioning.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -69,6 +70,17 @@ app.get('/api/dns/resolve', requireAuth, async (req, res) => {
     res.json({ success: true, domain, type, answers: stdout.trim() ? stdout.trim().split('\n') : [] });
   } catch (error) {
     res.status(502).json({ success: false, message: 'DNS resolver query failed' });
+  }
+});
+
+app.post('/api/domains/provision', requireAuth, async (req, res) => {
+  try {
+    const { domain, username, phpSocket } = req.body ?? {};
+    const result = await provisionDomain({ domain: String(domain || '').toLowerCase(), username: String(username || '').toLowerCase(), phpSocket });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('domain provision error', error);
+    res.status(400).json({ success: false, message: error?.message || 'Domain provisioning failed' });
   }
 });
 
