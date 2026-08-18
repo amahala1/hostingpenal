@@ -57,7 +57,7 @@ export async function provisionDomain({ domain, username, phpSocket }) {
   await fs.symlink(nginxPath, nginxEnabledPath);
 
   await execFileAsync(config.nginxBinary, ['-t']);
-  await execFileAsync(config.nginxReloadBinary, ['reload']);
+  await execFileAsync(config.nginxBinary, ['-s', 'reload']);
 
   return { domain, username, documentRoot, nginxPath, enabled: true };
 }
