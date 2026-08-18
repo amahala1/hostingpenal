@@ -1,0 +1,125 @@
+/* HostingPenal modern UI layer — custom CSS only. */
+:root {
+  --hp-sidebar-bg: #111827;
+  --hp-sidebar-panel: #172033;
+  --hp-sidebar-border: rgba(255,255,255,.08);
+  --hp-sidebar-text: #cbd5e1;
+  --hp-sidebar-muted: #94a3b8;
+  --hp-sidebar-active: #7c3aed;
+  --hp-surface: rgba(255,255,255,.96);
+  --hp-border: #e5e7eb;
+  --hp-shadow: 0 12px 32px rgba(15,23,42,.08);
+}
+
+#ha-sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, var(--hp-sidebar-bg) 0%, #0f172a 100%);
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: 14px 0 36px rgba(15,23,42,.12);
+  color: var(--hp-sidebar-text);
+}
+
+#ha-sidebar .hp-sidebar-brand {
+  background: rgba(255,255,255,.035);
+  border-bottom-color: var(--hp-sidebar-border);
+}
+
+#ha-sidebar .hp-sidebar-logo {
+  box-shadow: 0 8px 24px rgba(124,58,237,.28);
+}
+
+#ha-sidebar .hp-sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,.35) transparent;
+}
+
+#ha-sidebar .hp-sidebar-group-label {
+  color: #64748b;
+  letter-spacing: .12em;
+}
+
+#ha-sidebar .hp-sidebar-item {
+  position: relative;
+  border: 1px solid transparent;
+  color: var(--hp-sidebar-text);
+  min-height: 44px;
+}
+
+#ha-sidebar .hp-sidebar-item:hover {
+  color: #fff;
+  background: rgba(255,255,255,.065);
+  border-color: rgba(255,255,255,.06);
+  transform: translateX(2px);
+}
+
+#ha-sidebar .hp-sidebar-item.hp-sidebar-item-active {
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: rgba(196,181,253,.24);
+  box-shadow: 0 8px 20px rgba(124,58,237,.28);
+}
+
+#ha-sidebar .hp-sidebar-item.hp-sidebar-item-active::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: #fbbf24;
+}
+
+#ha-sidebar .hp-sidebar-badge {
+  background: rgba(255,255,255,.08);
+  color: #cbd5e1;
+  border-color: rgba(255,255,255,.08);
+}
+
+#ha-sidebar .hp-sidebar-item-active .hp-sidebar-badge {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  border-color: rgba(255,255,255,.15);
+}
+
+#ha-sidebar .hp-sidebar-footer {
+  background: rgba(2,6,23,.32);
+  border-top-color: var(--hp-sidebar-border);
+}
+
+#ha-sidebar .hp-sidebar-user {
+  background: rgba(255,255,255,.045);
+  border-color: var(--hp-sidebar-border);
+}
+
+#ha-sidebar .hp-sidebar-muted { color: var(--hp-sidebar-muted); }
+#ha-sidebar .hp-sidebar-title { color: #f8fafc; }
+
+/* Shared surface language for sections that already use these classes. */
+.ha-card {
+  box-shadow: var(--hp-shadow);
+  border-color: var(--hp-border);
+  backdrop-filter: blur(8px);
+}
+
+.ha-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(15,23,42,.10);
+}
+
+.ha-table-container,
+.ha-input,
+.ha-btn-white {
+  border-color: var(--hp-border);
+}
+
+.ha-table th { background: #f8fafc; }
+
+@media (max-width: 1023px) {
+  #ha-sidebar { width: min(88vw, 320px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ha-sidebar .hp-sidebar-item,
+  .ha-card { transition: none !important; transform: none !important; }
+}
