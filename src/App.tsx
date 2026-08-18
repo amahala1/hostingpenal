@@ -17,7 +17,7 @@ import { PhpManagerSection } from './components/sections/PhpManagerSection';
 import { DatabaseSection } from './components/sections/DatabaseSection';
 import { SslSecuritySection } from './components/sections/SslSecuritySection';
 import { EmailHostingSection } from './components/sections/EmailHostingSection';
-import { DnsEditorSection } from './components/sections/DnsEditorSection';
+import { RealDnsEditorSection } from './components/sections/RealDnsEditorSection';
 import { ServerMetricsSection } from './components/sections/ServerMetricsSection';
 import { TerminalSection } from './components/sections/TerminalSection';
 import { BackupsSection } from './components/sections/BackupsSection';
@@ -41,101 +41,60 @@ const MainContent: React.FC = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // If unauthenticated, display the full-screen modern login portal
   if (!isAuthenticated) {
     return <LoginPage />;
   }
 
   const renderActiveSection = () => {
     switch (activeSection) {
-      case 'overview':
-        return <WebsiteHostingWorkspace />;
-      case 'user-panel':
-        return <UserPanelSection />;
-      case 'users-manager':
-        return <UserManagementSection />;
-      case 'reseller-portal':
-        return <ResellerPortalSection />;
-      case 'websites':
-        return <WebsitesSection />;
-      case 'file-manager':
-        return <FileManagerSection />;
-      case 'php-manager':
-        return <PhpManagerSection />;
-      case 'databases':
-        return <DatabaseSection />;
-      case 'phpmyadmin':
-        return <PhpMyAdminSection />;
-      case 'ssl-security':
-        return <SslSecuritySection />;
-      case 'email':
-        return <EmailHostingSection />;
-      case 'roundcube':
-        return <RoundcubeWebmailSection />;
+      case 'overview': return <WebsiteHostingWorkspace />;
+      case 'user-panel': return <UserPanelSection />;
+      case 'users-manager': return <UserManagementSection />;
+      case 'reseller-portal': return <ResellerPortalSection />;
+      case 'websites': return <WebsitesSection />;
+      case 'file-manager': return <FileManagerSection />;
+      case 'php-manager': return <PhpManagerSection />;
+      case 'databases': return <DatabaseSection />;
+      case 'phpmyadmin': return <PhpMyAdminSection />;
+      case 'ssl-security': return <SslSecuritySection />;
+      case 'email': return <EmailHostingSection />;
+      case 'roundcube': return <RoundcubeWebmailSection />;
       case 'dns':
-      case 'dns-editor':
-        return <DnsEditorSection />;
-      case 'metrics':
-        return <ServerMetricsSection />;
-      case 'terminal':
-        return <TerminalSection />;
-      case 'backups':
-        return <BackupsSection />;
-      case 'plugins':
-        return <PluginsSection />;
-      case 'audit-logs':
-        return <AuditLogsSection />;
-      case 'api-docs':
-        return <ApiDocsSection />;
+      case 'dns-editor': return <RealDnsEditorSection />;
+      case 'metrics': return <ServerMetricsSection />;
+      case 'terminal': return <TerminalSection />;
+      case 'backups': return <BackupsSection />;
+      case 'plugins': return <PluginsSection />;
+      case 'audit-logs': return <AuditLogsSection />;
+      case 'api-docs': return <ApiDocsSection />;
       case 'profile':
       case 'profile-settings':
-      case 'settings':
-        return <ProfileSettingsSection />;
-      default:
-        return <WebsitesSection />;
+      case 'settings': return <ProfileSettingsSection />;
+      default: return <WebsitesSection />;
     }
   };
 
   const getFontSizeClass = () => {
     switch (fontSize) {
-      case 'sm':
-        return 'text-sm';
-      case 'lg':
-        return 'text-lg';
-      case 'xl':
-        return 'text-xl';
-      default:
-        return 'text-base';
+      case 'sm': return 'text-sm';
+      case 'lg': return 'text-lg';
+      case 'xl': return 'text-xl';
+      default: return 'text-base';
     }
   };
 
   return (
     <div className={`min-h-screen bg-[#F8F9FD] text-slate-900 ${getFontSizeClass()} flex antialiased`}>
-      {/* Navigation Sidebar */}
       <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
-
-      {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col min-w-0 lg:ml-72 transition-all duration-300">
-        {/* Top Sticky Header */}
         <Header onToggleMobileSidebar={() => setMobileOpen(!mobileOpen)} />
-
-        {/* Dynamic Section Body */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {renderActiveSection()}
         </main>
       </div>
-
-      {/* Global Modals: VPS Auto-Installer & Live SSH Terminal */}
-      <VpsInstallerModal
-        isOpen={vpsInstallerModalOpen}
-        onClose={() => setVpsInstallerModalOpen(false)}
-      />
+      <VpsInstallerModal isOpen={vpsInstallerModalOpen} onClose={() => setVpsInstallerModalOpen(false)} />
       <LiveSshTerminalModal />
-
-      {/* Global Interactive Command Palette (Cmd/Ctrl + K) */}
       <CommandPalette />
-
-      {/* Screen Reader Announcer & Toast Alerts */}
       <AccessibilityAnnouncer />
       <ToastContainer />
     </div>
