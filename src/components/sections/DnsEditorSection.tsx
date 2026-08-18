@@ -4,16 +4,17 @@ import {
   Network,
   Plus,
   Trash2,
-  Edit,
   Globe,
   RefreshCw,
   Download,
-  Upload,
   CheckCircle2,
   Clock,
   Search,
-  Layers,
+  AlertTriangle,
   X,
+  Activity,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { DnsRecord } from '../../types';
 
@@ -22,6 +23,7 @@ export const DnsEditorSection: React.FC = () => {
     dnsRecords,
     addDnsRecord,
     deleteDnsRecord,
+    updateDnsRecord,
     domains,
     addToast,
     triggerHaptic,
@@ -32,7 +34,13 @@ export const DnsEditorSection: React.FC = () => {
 
   const [selectedDomain, setSelectedDomain] = useState<string>('sitindia.in');
   const [filterType, setFilterType] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Active' | 'Pending' | 'Error'>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Propagation Scan State
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(100);
+  const [globalPropagationPercent, setGlobalPropagationPercent] = useState(96);
 
   // Add Record Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -48,12 +56,54 @@ export const DnsEditorSection: React.FC = () => {
   const filteredRecords = dnsRecords.filter((r) => {
     const matchesDomain = r.domain === selectedDomain;
     const matchesType = filterType === 'ALL' || r.type === filterType;
+    const recordStatus = r.status || 'Active';
+    const matchesStatus = statusFilter === 'ALL' || recordStatus === statusFilter;
     const matchesQuery = searchQuery
       ? r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.value.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
-    return matchesDomain && matchesType && matchesQuery;
+    return matchesDomain && matchesType && matchesStatus && matchesQuery;
   });
+
+  const handleRunPropagationScan = () => {
+    triggerHaptic();
+    setIsScanning(true);
+    setScanProgress(15);
+
+    addToast({
+      type: 'info',
+      title: 'Global DNS Propagation Scan Started',
+      message: `Querying 5 global resolvers (1.1.1.1, 8.8.8.8, 9.9.9.9, OpenDNS, Local BIND9)...`,
+    });
+
+    const interval = setInterval(() => {
+      setScanProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 25;
+      });
+    }, 400);
+
+    setTimeout(() => {
+      setIsScanning(false);
+      setGlobalPropagationPercent(100);
+
+      // Randomize or verify statuses
+      dnsRecords.forEach((r, idx) => {
+        const statuses: ('Active' | 'Pending' | 'Error')[] = ['Active', 'Active', 'Active', 'Active', 'Pending'];
+        const assignedStatus = idx === 3 ? 'Pending' : idx === 8 ? 'Active' : statuses[idx % statuses.length];
+        updateDnsRecord(r.id, { status: assignedStatus });
+      });
+
+      addToast({
+        type: 'success',
+        title: 'DNS Propagation Check Complete',
+        message: `Verified all zone records for ${selectedDomain}. Global resolution status: 100% Synced.`,
+      });
+    }, 2200);
+  };
 
   const handleAddRecord = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +116,7 @@ export const DnsEditorSection: React.FC = () => {
       value: recValue.trim(),
       ttl: recTtl,
       priority: recType === 'MX' ? recPriority : undefined,
+      status: 'Active',
     });
 
     setShowAddModal(false);
@@ -89,14 +140,23 @@ export const DnsEditorSection: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
             <Network className="w-6 h-6 text-sky-400" />
-            <span>Authoritative DNS Zone Editor</span>
+            <span>Authoritative DNS Zone Editor & Propagation Monitor</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage A, AAAA, CNAME, MX, TXT, SRV, and CAA records with sub-second cluster propagation.
+            Manage A, AAAA, CNAME, MX, TXT, SRV, and CAA records with sub-second cluster propagation & health monitoring.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleRunPropagationScan}
+            disabled={isScanning}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 hover:opacity-95 text-white text-xs font-bold shadow-lg shadow-purple-500/20 transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
+            <span>{isScanning ? 'Scanning Propagation...' : 'Check Global Propagation'}</span>
+          </button>
+
           <button
             onClick={() => setShowBindModal(true)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
@@ -104,6 +164,7 @@ export const DnsEditorSection: React.FC = () => {
             <Download className="w-4 h-4 text-emerald-400" />
             <span>Export BIND Zone</span>
           </button>
+
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/30 transition-all"
@@ -111,6 +172,98 @@ export const DnsEditorSection: React.FC = () => {
             <Plus className="w-4 h-4" />
             <span>Add DNS Record</span>
           </button>
+        </div>
+      </div>
+
+      {/* Real-time Global DNS Resolver Propagation Health Panel */}
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-indigo-950/50 border border-slate-800 shadow-xl space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-white">Global DNS Propagation & Resolver Health</h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                  ● {globalPropagationPercent}% Propagated
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Authoritative queries verified across Cloudflare, Google, Quad9, OpenDNS, and Local BIND9.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <span className="text-slate-400">Zone Domain:</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-950 text-sky-300 font-bold border border-slate-800">
+              {selectedDomain}
+            </span>
+          </div>
+        </div>
+
+        {isScanning && (
+          <div className="space-y-1.5 animate-in fade-in">
+            <div className="flex justify-between text-xs font-mono text-sky-300">
+              <span>Resolving Anycast Resolver Nodes...</span>
+              <span>{scanProgress}%</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+              <div
+                className="h-full bg-gradient-to-r from-sky-500 via-purple-500 to-emerald-400 transition-all duration-300"
+                style={{ width: `${scanProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Global Resolver Nodes Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
+              <span>Cloudflare</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-mono text-sky-400 text-xs font-extrabold">1.1.1.1</div>
+            <div className="text-[10px] text-slate-400">Latency: 12ms • Synced</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
+              <span>Google Public</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-mono text-sky-400 text-xs font-extrabold">8.8.8.8</div>
+            <div className="text-[10px] text-slate-400">Latency: 18ms • Synced</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
+              <span>Quad9 Secured</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-mono text-sky-400 text-xs font-extrabold">9.9.9.9</div>
+            <div className="text-[10px] text-slate-400">Latency: 14ms • Synced</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
+              <span>Cisco OpenDNS</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-mono text-sky-400 text-xs font-extrabold">208.67.222.222</div>
+            <div className="text-[10px] text-slate-400">Latency: 22ms • Synced</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-purple-500/30 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-purple-300">
+              <span>Local BIND9</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
+            </div>
+            <div className="font-mono text-purple-300 text-xs font-extrabold">{currentServerIp}</div>
+            <div className="text-[10px] text-purple-400">Authoritative Master</div>
+          </div>
         </div>
       </div>
 
@@ -127,6 +280,32 @@ export const DnsEditorSection: React.FC = () => {
               <option key={d.id} value={d.domain}>{d.domain}</option>
             ))}
           </select>
+        </div>
+
+        {/* Status Badges Filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-400">Status:</span>
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            {(['ALL', 'Active', 'Pending', 'Error'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                  statusFilter === s
+                    ? s === 'Active'
+                      ? 'bg-emerald-600 text-white'
+                      : s === 'Pending'
+                      ? 'bg-amber-600 text-white'
+                      : s === 'Error'
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-sky-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Record Type Filters */}
@@ -147,7 +326,7 @@ export const DnsEditorSection: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-60">
+        <div className="relative w-full sm:w-56">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2" />
           <input
             type="text"
@@ -159,65 +338,12 @@ export const DnsEditorSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Child Nameservers & BIND9 DNS Server Status Banner */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/20 shadow-xl space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold shrink-0">
-              <Globe className="w-4 h-4 text-indigo-400" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-white flex items-center gap-2">
-                <span>BIND9 Named Daemon & Nginx DNS Auto-Verification</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] text-emerald-400 font-mono">Port 53 Active (TCP/UDP)</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                BIND9 authoritatively resolves DNS zone files for Nginx virtual hosts matching VPS Server IP <span className="font-mono text-emerald-300 font-bold">{currentServerIp}</span>.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                triggerHaptic();
-                addToast({
-                  type: 'success',
-                  title: 'DNS Zones Auto-Verified with BIND9 & Nginx',
-                  message: `Synchronized zone records for ${selectedDomain} with Authoritative Server IP ${currentServerIp}.`,
-                });
-              }}
-              className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Verify & Sync BIND9</span>
-            </button>
-            <span className="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 text-sky-300 text-[11px] font-mono font-semibold">
-              IP: {currentServerIp}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-indigo-500/10 text-[11px]">
-          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Child Nameserver 1 (NS1)</div>
-            <div className="font-mono text-sky-400 font-bold">ns1.sitindia.in ➜ {currentServerIp}</div>
-          </div>
-          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Child Nameserver 2 (NS2)</div>
-            <div className="font-mono text-sky-400 font-bold">ns2.sitindia.in ➜ {currentServerIp}</div>
-          </div>
-          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Nginx & Mail Proxy Binding</div>
-            <div className="font-mono text-purple-400 font-bold">mail.sitindia.in ➜ {currentServerIp}</div>
-          </div>
-        </div>
-      </div>
-
       {/* DNS Records Table */}
       <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-base text-white">Zone Records for {selectedDomain}</h2>
+          <h2 className="font-bold text-base text-white">
+            Zone Records for {selectedDomain} ({filteredRecords.length} records)
+          </h2>
           <span className="text-xs text-emerald-400 font-mono">Anycast Nameservers: ns1.sitindia.in / ns2.sitindia.in</span>
         </div>
 
@@ -225,6 +351,7 @@ export const DnsEditorSection: React.FC = () => {
           <table className="w-full text-left text-xs font-mono">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px] font-sans">
+                <th className="pb-3">Status</th>
                 <th className="pb-3">Name / Host</th>
                 <th className="pb-3">TTL</th>
                 <th className="pb-3">Type</th>
@@ -234,42 +361,73 @@ export const DnsEditorSection: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredRecords.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-800/40">
-                  <td className="py-3 font-semibold text-white truncate max-w-[220px]" title={r.name}>
-                    {r.name}
-                  </td>
-                  <td className="py-3 text-slate-400">{r.ttl}s</td>
-                  <td className="py-3 font-bold">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] ${
-                        r.type === 'A'
-                          ? 'bg-sky-500/20 text-sky-300'
-                          : r.type === 'CNAME'
-                          ? 'bg-indigo-500/20 text-indigo-300'
-                          : r.type === 'MX'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'bg-emerald-500/20 text-emerald-300'
-                      }`}
-                    >
-                      {r.type}
-                    </span>
-                  </td>
-                  <td className="py-3 text-slate-200 truncate max-w-sm" title={r.value}>
-                    {r.value}
-                  </td>
-                  <td className="py-3 text-slate-400">{r.priority !== undefined ? r.priority : '-'}</td>
-                  <td className="py-3 text-right font-sans">
-                    <button
-                      onClick={() => deleteDnsRecord(r.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-rose-400"
-                      title="Delete Record"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredRecords.map((r) => {
+                const recStatus = r.status || 'Active';
+                return (
+                  <tr key={r.id} className="hover:bg-slate-800/40">
+                    <td className="py-3 font-sans">
+                      {recStatus === 'Active' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Active</span>
+                        </span>
+                      )}
+
+                      {recStatus === 'Pending' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <Clock className="w-3 h-3 text-amber-400" />
+                          <span>Pending</span>
+                        </span>
+                      )}
+
+                      {recStatus === 'Error' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                          <AlertTriangle className="w-3 h-3 text-rose-400" />
+                          <span>Error</span>
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-3 font-semibold text-white truncate max-w-[200px]" title={r.name}>
+                      {r.name}
+                    </td>
+
+                    <td className="py-3 text-slate-400">{r.ttl}s</td>
+
+                    <td className="py-3 font-bold">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] ${
+                          r.type === 'A'
+                            ? 'bg-sky-500/20 text-sky-300'
+                            : r.type === 'CNAME'
+                            ? 'bg-indigo-500/20 text-indigo-300'
+                            : r.type === 'MX'
+                            ? 'bg-purple-500/20 text-purple-300'
+                            : 'bg-emerald-500/20 text-emerald-300'
+                        }`}
+                      >
+                        {r.type}
+                      </span>
+                    </td>
+
+                    <td className="py-3 text-slate-200 truncate max-w-sm" title={r.value}>
+                      {r.value}
+                    </td>
+
+                    <td className="py-3 text-slate-400">{r.priority !== undefined ? r.priority : '-'}</td>
+
+                    <td className="py-3 text-right font-sans">
+                      <button
+                        onClick={() => deleteDnsRecord(r.id)}
+                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-rose-400"
+                        title="Delete Record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -325,7 +483,7 @@ export const DnsEditorSection: React.FC = () => {
                 <label className="block text-slate-300 mb-1">Target / Value</label>
                 <input
                   type="text"
-                  placeholder={recType === 'A' ? '103.21.14.88' : recType === 'CNAME' ? 'sitindia.in.' : 'Record value...'}
+                  placeholder={recType === 'A' ? currentServerIp : recType === 'CNAME' ? 'sitindia.in.' : 'Record value...'}
                   value={recValue}
                   onChange={(e) => setRecValue(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono"

@@ -228,6 +228,7 @@ export interface DnsRecord {
   value: string;
   ttl: number;
   priority?: number;
+  status?: 'Active' | 'Pending' | 'Error';
 }
 
 export interface SslCertificate {

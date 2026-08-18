@@ -706,16 +706,70 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const login = (username?: string, password?: string): boolean => {
     setIsAuthenticated(true);
     localStorage.setItem('hostadmin_auth', 'true');
-    addToast({
-      type: 'success',
-      title: 'Welcome Back, Admin',
-      message: `Signed in as ${username || userProfile.username} (Super Administrator).`,
-    });
+
+    const inputUser = (username || 'superadmin').trim();
+    const lowerUser = inputUser.toLowerCase();
+
+    // Hierarchy check: Master Admin -> Reseller -> User
+    if (lowerUser === 'superadmin' || lowerUser === 'admin' || lowerUser === masterAccount?.username?.toLowerCase()) {
+      setUserProfile((prev) => ({
+        ...prev,
+        username: inputUser,
+        name: 'Master Super Administrator',
+        role: 'Super Administrator',
+      }));
+      setPanelMode('admin');
+      setActiveSection('overview');
+
+      addToast({
+        type: 'success',
+        title: 'Master Administrator Control Panel',
+        message: `Signed in as Super Administrator '${inputUser}'. Full Server Control active.`,
+      });
+    } else if (lowerUser.includes('reseller')) {
+      setUserProfile((prev) => ({
+        ...prev,
+        username: inputUser,
+        name: 'Reseller Hosting Console',
+        role: 'Reseller',
+      }));
+      setPanelMode('admin');
+      setActiveSection('users-manager');
+
+      addToast({
+        type: 'success',
+        title: 'Reseller Portal Authenticated',
+        message: `Signed in as Reseller '${inputUser}'. Scope: Hosting Package Creation & Tenant Account Management.`,
+      });
+    } else {
+      setUserProfile((prev) => ({
+        ...prev,
+        username: inputUser,
+        name: `User Account (${inputUser})`,
+        role: 'Site Admin',
+      }));
+
+      const matchedUser = serverUsers.find((u) => u.username.toLowerCase() === lowerUser);
+      if (matchedUser) {
+        setActiveUserAccount(matchedUser);
+        setSelectedDomain(matchedUser.domain);
+      }
+
+      setPanelMode('user');
+      setActiveSection('user-panel');
+
+      addToast({
+        type: 'success',
+        title: 'User Control Panel Signed In',
+        message: `Signed in as User '${inputUser}'. Accessing cPanel web hosting tools.`,
+      });
+    }
+
     addAuditLog({
-      action: 'Administrator Session Authenticated',
+      action: 'User Session Authenticated',
       category: 'Security',
       severity: 'info',
-      details: `User ${username || userProfile.username} successfully logged in with 2FA verification.`,
+      details: `User ${inputUser} logged into control panel session.`,
     });
     return true;
   };

@@ -949,18 +949,18 @@ Pooja Sharma`,
 ];
 
 export const INITIAL_DNS_RECORDS: DnsRecord[] = [
-  { id: 'dns-1', domain: 'sitindia.in', name: '@', type: 'A', value: '103.174.102.45', ttl: 3600 },
-  { id: 'dns-2', domain: 'sitindia.in', name: 'www', type: 'CNAME', value: 'sitindia.in', ttl: 3600 },
-  { id: 'dns-3', domain: 'sitindia.in', name: 'api', type: 'A', value: '103.174.102.45', ttl: 1800 },
-  { id: 'dns-4', domain: 'sitindia.in', name: 'shop', type: 'A', value: '103.174.102.45', ttl: 1800 },
-  { id: 'dns-5', domain: 'sitindia.in', name: 'staging', type: 'A', value: '103.174.102.45', ttl: 300 },
-  { id: 'dns-6', domain: 'sitindia.in', name: 'mail', type: 'A', value: '103.174.102.45', ttl: 3600 },
-  { id: 'dns-7', domain: 'sitindia.in', name: '@', type: 'MX', value: 'mail.sitindia.in', ttl: 3600, priority: 10 },
-  { id: 'dns-8', domain: 'sitindia.in', name: '@', type: 'TXT', value: 'v=spf1 ip4:103.174.102.45 +a +mx ~all', ttl: 3600 },
-  { id: 'dns-9', domain: 'sitindia.in', name: 'default._domainkey', type: 'TXT', value: 'v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyv...', ttl: 3600 },
-  { id: 'dns-10', domain: 'sitindia.in', name: '_dmarc', type: 'TXT', value: 'v=DMARC1; p=quarantine; sp=quarantine; pct=100; rua=mailto:dmarc-reports@sitindia.in', ttl: 3600 },
-  { id: 'dns-11', domain: 'sitindia.in', name: '@', type: 'NS', value: 'ns1.sitindia.in', ttl: 86400 },
-  { id: 'dns-12', domain: 'sitindia.in', name: '@', type: 'NS', value: 'ns2.sitindia.in', ttl: 86400 },
+  { id: 'dns-1', domain: 'sitindia.in', name: '@', type: 'A', value: '103.174.102.45', ttl: 3600, status: 'Active' },
+  { id: 'dns-2', domain: 'sitindia.in', name: 'www', type: 'CNAME', value: 'sitindia.in', ttl: 3600, status: 'Active' },
+  { id: 'dns-3', domain: 'sitindia.in', name: 'api', type: 'A', value: '103.174.102.45', ttl: 1800, status: 'Active' },
+  { id: 'dns-4', domain: 'sitindia.in', name: 'shop', type: 'A', value: '103.174.102.45', ttl: 1800, status: 'Pending' },
+  { id: 'dns-5', domain: 'sitindia.in', name: 'staging', type: 'A', value: '103.174.102.45', ttl: 300, status: 'Active' },
+  { id: 'dns-6', domain: 'sitindia.in', name: 'mail', type: 'A', value: '103.174.102.45', ttl: 3600, status: 'Active' },
+  { id: 'dns-7', domain: 'sitindia.in', name: '@', type: 'MX', value: 'mail.sitindia.in', ttl: 3600, priority: 10, status: 'Active' },
+  { id: 'dns-8', domain: 'sitindia.in', name: '@', type: 'TXT', value: 'v=spf1 ip4:103.174.102.45 +a +mx ~all', ttl: 3600, status: 'Active' },
+  { id: 'dns-9', domain: 'sitindia.in', name: 'default._domainkey', type: 'TXT', value: 'v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyv...', ttl: 3600, status: 'Active' },
+  { id: 'dns-10', domain: 'sitindia.in', name: '_dmarc', type: 'TXT', value: 'v=DMARC1; p=quarantine; sp=quarantine; pct=100; rua=mailto:dmarc-reports@sitindia.in', ttl: 3600, status: 'Active' },
+  { id: 'dns-11', domain: 'sitindia.in', name: '@', type: 'NS', value: 'ns1.sitindia.in', ttl: 86400, status: 'Active' },
+  { id: 'dns-12', domain: 'sitindia.in', name: '@', type: 'NS', value: 'ns2.sitindia.in', ttl: 86400, status: 'Active' },
 ];
 
 export const INITIAL_SSL_CERTS: SslCertificate[] = [
