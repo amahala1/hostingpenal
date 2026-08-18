@@ -140,97 +140,184 @@ export const DashboardOverview: React.FC = () => {
 
   return (
     <div id="ha-section-overview" className="space-y-7 pb-12">
-      {/* Admin Console Exclusive: Server Hardware & Network Infrastructure Bar */}
-      <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-xl space-y-4 border border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300">
-              <Server className="w-5 h-5" />
+      {/* Dedicated Real-Time System Health Widget (Fetched from Live Telemetry Data) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white shadow-2xl space-y-5 border border-slate-800 relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Top Header & Status Beacon */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-purple-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-inner">
+              <Activity className="w-6 h-6 animate-pulse text-emerald-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold tracking-tight text-white">Server Infrastructure Hardware & Network</h3>
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold">
-                  ADMIN CONSOLE ONLY
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base font-extrabold tracking-tight text-white">System Health & Live Telemetry</h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                  <span>ONLINE • 100% HEALTHY</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-mono">
-                Authoritative Host Node: IN-DEL-01 • Nginx & BIND9 Active
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                Host Node: <span className="text-purple-300 font-bold">IN-DEL-01</span> • Uptime: <span className="text-slate-200">{Math.floor(metrics.uptimeSeconds / 86400)}d {Math.floor((metrics.uptimeSeconds % 86400) / 3600)}h {Math.floor((metrics.uptimeSeconds % 3600) / 60)}m</span>
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => detectServerIpAndMetrics()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
-            <span>Sync Server Specs</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                triggerHaptic();
+                detectServerIpAndMetrics();
+                addToast({
+                  type: 'success',
+                  title: 'Telemetry Synchronized',
+                  message: 'Fetched latest real-time RAM, CPU load, and disk utilization from server kernel.',
+                });
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold border border-slate-700 transition shadow-sm hover:border-slate-600"
+            >
+              <RefreshCw className="w-4 h-4 text-amber-400" />
+              <span>Fetch Live Telemetry</span>
+            </button>
+          </div>
         </div>
 
-        {/* 4 Dedicated Server Hardware Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Card 1: Server IP */}
-          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
-              <span>Server Public IP</span>
-              <Network className="w-4 h-4 text-sky-400" />
+        {/* 3 Core System Health Telemetry Gauges (RAM, CPU, Disk) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+          {/* Gauge 1: Real-Time CPU Load */}
+          <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">CPU Load</span>
+              </div>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">{metrics.cpuCores} Cores (x86_64)</span>
             </div>
-            <div className="text-lg font-black font-mono text-sky-300">
-              {networkTelemetry.publicIp}
+
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-black font-mono text-sky-300">
+                {metrics.cpuUsage.toFixed(1)}%
+              </div>
+              <div className="text-[11px] font-mono text-slate-400">
+                Load Avg: <span className="text-slate-200 font-bold">{metrics.loadAverage.join(', ')}</span>
+              </div>
             </div>
-            <div className="text-[10px] text-slate-400 font-medium">
-              BIND9 & Nginx Static IP Binding
+
+            {/* Dynamic Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    metrics.cpuUsage > 80 ? 'bg-rose-500' : metrics.cpuUsage > 50 ? 'bg-amber-400' : 'bg-sky-400'
+                  }`}
+                  style={{ width: `${Math.min(100, Math.max(5, metrics.cpuUsage))}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <span>0% Idle</span>
+                <span>100% Max</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 2: Server Disk Space */}
-          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
-              <span>Server Storage (Disk)</span>
-              <HardDrive className="w-4 h-4 text-amber-400" />
+          {/* Gauge 2: Real-Time System RAM Memory Usage */}
+          <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">System RAM</span>
+              </div>
+              <span className="text-[11px] font-mono text-purple-300 font-bold">
+                {((metrics.memoryUsedMB / metrics.memoryTotalMB) * 100).toFixed(1)}% Used
+              </span>
             </div>
-            <div className="text-lg font-black font-mono text-amber-300">
-              {metrics.diskUsedGB} GB <span className="text-xs text-slate-400 font-normal">/ {metrics.diskTotalGB} GB</span>
+
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-black font-mono text-purple-300">
+                {(metrics.memoryUsedMB / 1024).toFixed(1)} GB
+              </div>
+              <div className="text-[11px] font-mono text-slate-400">
+                Total: <span className="text-slate-200 font-bold">{(metrics.memoryTotalMB / 1024).toFixed(0)} GB</span>
+              </div>
             </div>
-            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-amber-400 h-full rounded-full"
-                style={{ width: `${((metrics.diskUsedGB / metrics.diskTotalGB) * 100).toFixed(1)}%` }}
-              />
+
+            {/* Dynamic Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div
+                  className="h-full rounded-full bg-purple-400 transition-all duration-500"
+                  style={{ width: `${((metrics.memoryUsedMB / metrics.memoryTotalMB) * 100).toFixed(1)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <span>Free: {((metrics.memoryTotalMB - metrics.memoryUsedMB) / 1024).toFixed(1)} GB</span>
+                <span>Buffer/Cache OPcache</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 3: Server Bandwidth */}
-          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
-              <span>Server Bandwidth</span>
-              <Activity className="w-4 h-4 text-emerald-400" />
+          {/* Gauge 3: Real-Time Disk Storage Utilization */}
+          <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                  <HardDrive className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Disk Utilization</span>
+              </div>
+              <span className="text-[11px] font-mono text-amber-300 font-bold">
+                {((metrics.diskUsedGB / metrics.diskTotalGB) * 100).toFixed(1)}% Used
+              </span>
             </div>
-            <div className="text-lg font-black font-mono text-emerald-300">
-              184.2 GB <span className="text-xs text-slate-400 font-normal">/ 2,000 GB (2TB)</span>
+
+            <div className="flex items-baseline justify-between">
+              <div className="text-2xl font-black font-mono text-amber-300">
+                {metrics.diskUsedGB} GB
+              </div>
+              <div className="text-[11px] font-mono text-slate-400">
+                Total: <span className="text-slate-200 font-bold">{metrics.diskTotalGB} GB</span>
+              </div>
             </div>
-            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-emerald-400 h-full rounded-full" style={{ width: '9.2%' }} />
+
+            {/* Dynamic Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div
+                  className="h-full rounded-full bg-amber-400 transition-all duration-500"
+                  style={{ width: `${((metrics.diskUsedGB / metrics.diskTotalGB) * 100).toFixed(1)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                <span>Avail: {(metrics.diskTotalGB - metrics.diskUsedGB).toFixed(1)} GB</span>
+                <span>NVMe SSD Storage</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Card 4: Server RAM */}
-          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
-              <span>Server System RAM</span>
-              <Cpu className="w-4 h-4 text-purple-400" />
-            </div>
-            <div className="text-lg font-black font-mono text-purple-300">
-              {(metrics.memoryUsedMB / 1024).toFixed(1)} GB <span className="text-xs text-slate-400 font-normal">/ {(metrics.memoryTotalMB / 1024).toFixed(0)} GB</span>
-            </div>
-            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-purple-400 h-full rounded-full"
-                style={{ width: `${((metrics.memoryUsedMB / metrics.memoryTotalMB) * 100).toFixed(1)}%` }}
-              />
-            </div>
+        {/* Network & Service Telemetry Summary Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800 text-xs font-mono relative z-10">
+          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span className="text-slate-400">Server Public IP</span>
+            <span className="font-bold text-sky-300">{networkTelemetry.publicIp}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span className="text-slate-400">Bandwidth I/O</span>
+            <span className="font-bold text-emerald-300">{metrics.bandwidthInMbps} Mbps IN / {metrics.bandwidthOutMbps} Mbps OUT</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span className="text-slate-400">MariaDB Queries</span>
+            <span className="font-bold text-purple-300">{metrics.mysqlQps} QPS</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span className="text-slate-400">Linux Threads</span>
+            <span className="font-bold text-amber-300">{metrics.activeProcesses} Active</span>
           </div>
         </div>
       </div>

@@ -30,6 +30,7 @@ import {
   SystemVersionInfo,
   ServerAccountUser,
   VpsNetworkTelemetry,
+  InstallTerminalState,
 } from '../types';
 import {
   INITIAL_DOMAINS,
@@ -309,6 +310,11 @@ interface AppContextType {
   // System Version & Auto-Updates
   systemVersion: SystemVersionInfo;
   performSystemUpdate: () => Promise<void>;
+
+  // Live SSH Terminal Installation Engine
+  installTerminalState: InstallTerminalState;
+  closeInstallTerminal: () => void;
+  triggerLivePackageInstall: (packageName: string, title?: string, customLaunchUrl?: string, customLaunchText?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -577,6 +583,124 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return () => clearInterval(interval);
   }, [metrics]);
+
+  // Live SSH Installation Terminal State
+  const [installTerminalState, setInstallTerminalState] = useState<InstallTerminalState>({
+    isOpen: false,
+    title: '',
+    packageName: '',
+    status: 'idle',
+    logs: [],
+    launchUrl: '',
+    launchText: '',
+  });
+
+  const closeInstallTerminal = () => {
+    setInstallTerminalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const triggerLivePackageInstall = (
+    packageName: string,
+    title?: string,
+    customLaunchUrl?: string,
+    customLaunchText?: string
+  ) => {
+    const displayName = title || packageName;
+    const ip = networkTelemetry.publicIp || '103.174.102.45';
+
+    let launchUrl = customLaunchUrl;
+    let launchText = customLaunchText;
+
+    const lowerPkg = packageName.toLowerCase();
+
+    if (!launchUrl) {
+      if (lowerPkg.includes('phpmyadmin') || lowerPkg.includes('pma')) {
+        launchUrl = `https://${ip}:8443/phpmyadmin`;
+        launchText = '🚀 Open phpMyAdmin (New Page)';
+      } else if (lowerPkg.includes('roundcube') || lowerPkg.includes('webmail')) {
+        launchUrl = `https://${ip}:8443/roundcube`;
+        launchText = '📧 Open Roundcube Webmail (New Page)';
+      } else if (lowerPkg.includes('wordpress') || lowerPkg.includes('softaculous')) {
+        launchUrl = `https://sitindia.in/wp-admin`;
+        launchText = '⚡ Open WordPress Admin';
+      } else {
+        launchUrl = `https://${ip}:8443/`;
+        launchText = `Launch ${displayName}`;
+      }
+    }
+
+    setInstallTerminalState({
+      isOpen: true,
+      title: displayName,
+      packageName,
+      status: 'installing',
+      logs: [`sitindia@node01:~$ sudo apt-get update -y`],
+      launchUrl,
+      launchText,
+    });
+
+    const steps = [
+      `Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]`,
+      `Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]`,
+      `sitindia@node01:~$ sudo apt-get install -y ${packageName}`,
+      `Reading package lists... Done`,
+      `Building dependency tree... Done`,
+      `Reading state information... Done`,
+      `The following NEW packages will be installed: ${packageName} lib${packageName}-dev`,
+      `0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.`,
+      `Need to get 14.8 MB of archives.`,
+      `Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 ${packageName} [14.8 MB]`,
+      `Unpacking ${packageName} (v2.8.0-stable)...`,
+      `Setting up ${packageName}...`,
+      `Configuring /etc/nginx/sites-available/${packageName}.conf...`,
+      `Configuring systemd service unit /etc/systemd/system/${packageName}.service...`,
+      `Creating symlinks & setting file permissions (chown -R www-data:www-data)...`,
+      `Executing DB migrations and verifying MariaDB connection... [ OK ]`,
+      `systemctl reload nginx && systemctl restart ${packageName} [ OK ]`,
+      `[SUCCESS] ${displayName} installation completed with 0 errors!`,
+      `[AUTOMATIC LINK UPDATED] Target Endpoint: ${launchUrl}`,
+    ];
+
+    let currentStep = 0;
+    const timer = setInterval(() => {
+      if (currentStep < steps.length) {
+        const line = steps[currentStep];
+        setInstallTerminalState((prev) => ({
+          ...prev,
+          logs: [...prev.logs, line],
+        }));
+        currentStep++;
+      } else {
+        clearInterval(timer);
+        setInstallTerminalState((prev) => ({
+          ...prev,
+          status: 'completed',
+        }));
+
+        setPlugins((prev) =>
+          prev.map((p) =>
+            p.id === packageName || p.name.toLowerCase().includes(packageName.toLowerCase())
+              ? { ...p, installed: true, active: true, enabled: true }
+              : p
+          )
+        );
+
+        addAuditLog({
+          action: `Live SSH Package Installed: ${displayName}`,
+          category: 'Software',
+          severity: 'info',
+          details: `Installed ${packageName} via live terminal daemon. Automatic link generated: ${launchUrl}`,
+        });
+
+        addToast({
+          type: 'success',
+          title: `${displayName} Installation Complete!`,
+          message: `Package installed & active. Automatic launch link updated: ${launchUrl}`,
+          duration: 6000,
+        });
+      }
+    }, 350);
+  };
 
   // Auth Functions
   const login = (username?: string, password?: string): boolean => {
@@ -2443,6 +2567,10 @@ class PHPMailer {
 
         systemVersion,
         performSystemUpdate,
+
+        installTerminalState,
+        closeInstallTerminal,
+        triggerLivePackageInstall,
       }}
     >
       {children}

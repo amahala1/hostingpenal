@@ -382,3 +382,13 @@ export interface SystemVersionInfo {
   updateProgress: number;
   updateLog: string[];
 }
+
+export interface InstallTerminalState {
+  isOpen: boolean;
+  title: string;
+  packageName: string;
+  status: 'idle' | 'installing' | 'completed' | 'error';
+  logs: string[];
+  launchUrl?: string;
+  launchText?: string;
+}

@@ -17,6 +17,7 @@ import {
   Shield,
   FileCode,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -24,7 +25,7 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   isOpen,
   onClose,
 }) => {
-  const { databases, dbUsers, executeSqlQuery, addToast, userProfile } = useApp();
+  const { databases, dbUsers, executeSqlQuery, addToast, userProfile, networkTelemetry } = useApp();
 
   // Strict user database isolation (Requirement 3: Only databases belonging to the active logged-in user are shown)
   const allowedDatabases = databases.filter((db) => {
@@ -124,14 +125,14 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
 
           <div className="flex items-center gap-2">
             <a
-              href="https://demo.phpmyadmin.net/master-config/public/"
+              href={`https://${networkTelemetry.publicIp || '103.174.102.45'}:8443/phpmyadmin`}
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-xs font-semibold text-white transition"
-              title="Open Official phpMyAdmin Demo in new tab"
+              className="flex items-center gap-1.5 px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-full text-xs font-black transition shadow"
+              title="Open phpMyAdmin directly in new page"
             >
-              <span>Demo Server</span>
-              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <span>Open Direct Link</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-900" />
             </a>
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-amber-200" />

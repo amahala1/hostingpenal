@@ -6,6 +6,7 @@ import { LoginPage } from './components/LoginPage';
 import { CommandPalette } from './components/CommandPalette';
 import { AccessibilityAnnouncer, ToastContainer } from './components/AccessibilityAnnouncer';
 import { VpsInstallerModal } from './components/modals/VpsInstallerModal';
+import { LiveSshTerminalModal } from './components/modals/LiveSshTerminalModal';
 import { RoundcubeWebmailSection } from './components/sections/RoundcubeWebmailSection';
 
 import { DashboardOverview } from './components/sections/DashboardOverview';
@@ -118,11 +119,12 @@ const MainContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals: VPS Auto-Installer */}
+      {/* Global Modals: VPS Auto-Installer & Live SSH Terminal */}
       <VpsInstallerModal
         isOpen={vpsInstallerModalOpen}
         onClose={() => setVpsInstallerModalOpen(false)}
       />
+      <LiveSshTerminalModal />
 
       {/* Global Interactive Command Palette (Cmd/Ctrl + K) */}
       <CommandPalette />

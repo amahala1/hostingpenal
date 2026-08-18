@@ -17,7 +17,7 @@ import {
 import { SystemPlugin } from '../../types';
 
 export const PluginsSection: React.FC = () => {
-  const { plugins, togglePlugin, addToast, triggerHaptic } = useApp();
+  const { plugins, togglePlugin, addToast, triggerHaptic, triggerLivePackageInstall, networkTelemetry, launchPhpMyAdmin, setActiveSection } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -33,9 +33,41 @@ export const PluginsSection: React.FC = () => {
     return matchesCat && matchesSearch;
   });
 
-  const handleToggle = (plugin: SystemPlugin) => {
+  const handleInstallClick = (plugin: SystemPlugin) => {
     triggerHaptic();
-    togglePlugin(plugin.id);
+    if (plugin.enabled) {
+      togglePlugin(plugin.id);
+    } else {
+      triggerLivePackageInstall(plugin.id, plugin.name);
+    }
+  };
+
+  const getPluginLaunchUrl = (plugin: SystemPlugin): { url: string; label: string; action?: () => void } | null => {
+    const ip = networkTelemetry.publicIp || '103.174.102.45';
+    const lowerName = plugin.name.toLowerCase();
+
+    if (lowerName.includes('phpmyadmin')) {
+      return {
+        url: `https://${ip}:8443/phpmyadmin`,
+        label: 'Open phpMyAdmin',
+        action: () => launchPhpMyAdmin(),
+      };
+    }
+    if (lowerName.includes('roundcube') || lowerName.includes('webmail')) {
+      return {
+        url: `https://${ip}:8443/roundcube`,
+        label: 'Open Webmail',
+        action: () => setActiveSection('roundcube'),
+      };
+    }
+    if (lowerName.includes('softaculous') || lowerName.includes('wordpress')) {
+      return {
+        url: `https://sitindia.in/wp-admin`,
+        label: 'WordPress Portal',
+        action: () => window.open(`https://sitindia.in/wp-admin`, '_blank'),
+      };
+    }
+    return null;
   };
 
   return (
@@ -128,21 +160,37 @@ export const PluginsSection: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 gap-2">
               <span className="text-[10px] px-2 py-0.5 rounded bg-slate-950 text-slate-400 font-mono uppercase">
                 {plugin.category}
               </span>
 
-              <button
-                onClick={() => handleToggle(plugin)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  plugin.enabled
-                    ? 'bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300'
-                    : 'bg-pink-600 hover:bg-pink-500 text-white shadow-md shadow-pink-600/30'
-                }`}
-              >
-                {plugin.enabled ? 'Uninstall / Disable' : 'Install Plugin'}
-              </button>
+              <div className="flex items-center gap-2">
+                {plugin.enabled && getPluginLaunchUrl(plugin) && (
+                  <button
+                    onClick={() => {
+                      const linkInfo = getPluginLaunchUrl(plugin);
+                      if (linkInfo?.action) linkInfo.action();
+                      else if (linkInfo?.url) window.open(linkInfo.url, '_blank');
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1 transition"
+                  >
+                    <span>{getPluginLaunchUrl(plugin)?.label}</span>
+                    <ExternalLink className="w-3 h-3 text-emerald-400" />
+                  </button>
+                )}
+
+                <button
+                  onClick={() => handleInstallClick(plugin)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    plugin.enabled
+                      ? 'bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300'
+                      : 'bg-pink-600 hover:bg-pink-500 text-white shadow-md shadow-pink-600/30'
+                  }`}
+                >
+                  {plugin.enabled ? 'Uninstall' : 'Install (Live SSH)'}
+                </button>
+              </div>
             </div>
           </div>
         ))}

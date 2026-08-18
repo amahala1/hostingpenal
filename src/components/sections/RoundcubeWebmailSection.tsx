@@ -25,6 +25,7 @@ import {
   ChevronDown,
   Sparkles,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { WebmailMessage } from '../../types';
 
@@ -40,6 +41,7 @@ export const RoundcubeWebmailSection: React.FC = () => {
     triggerHaptic,
     roundcubeSessionMail,
     setRoundcubeSessionMail,
+    networkTelemetry,
   } = useApp();
 
   // Webmail Login Screen State
@@ -188,13 +190,25 @@ export const RoundcubeWebmailSection: React.FC = () => {
               <span>TLS 1.3 Encryption active on Port 993 (IMAP) and Port 587 (SMTP).</span>
             </div>
 
-            <button
-              type="submit"
-              className="w-full ha-btn ha-btn-purple py-2.5 text-sm font-bold shadow-md shadow-purple-500/20"
-            >
-              <Mail className="w-4 h-4 mr-1" />
-              <span>Login to Roundcube</span>
-            </button>
+            <div className="space-y-2 pt-1">
+              <button
+                type="submit"
+                className="w-full ha-btn ha-btn-purple py-2.5 text-sm font-bold shadow-md shadow-purple-500/20"
+              >
+                <Mail className="w-4 h-4 mr-1" />
+                <span>Login to Webmail Console</span>
+              </button>
+
+              <a
+                href={`https://${networkTelemetry.publicIp || '103.174.102.45'}:8443/roundcube`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition"
+              >
+                <span>Open Direct Roundcube Page (New Tab)</span>
+                <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+              </a>
+            </div>
           </form>
 
           <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center text-[11px] text-slate-400 font-medium">
