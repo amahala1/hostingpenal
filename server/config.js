@@ -16,4 +16,10 @@ export const config = {
   masterPasswordHash: required('MASTER_PASSWORD_HASH'),
   bindZoneDir: process.env.BIND_ZONE_DIR || '/etc/bind/zones',
   bindReloadCommand: process.env.BIND_RELOAD_COMMAND || 'rndc reload',
+  hostingHome: process.env.HOSTING_HOME || '/home',
+  nginxSitesAvailable: process.env.NGINX_SITES_AVAILABLE || '/etc/nginx/sites-available',
+  nginxSitesEnabled: process.env.NGINX_SITES_ENABLED || '/etc/nginx/sites-enabled',
+  nginxBinary: process.env.NGINX_BINARY || 'nginx',
+  nginxReloadBinary: process.env.NGINX_RELOAD_BINARY || 'systemctl',
+  defaultPhpSocket: process.env.DEFAULT_PHP_SOCKET || '/run/php/php8.3-fpm.sock',
 };
