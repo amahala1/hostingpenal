@@ -1257,7 +1257,7 @@ class PHPMailer {
     createFile(`${dom.docRoot}`, 'index.php', `<?php echo "<h1>Welcome to ${cleanDomain}</h1>";`);
 
     // Automatic DNS zone creation (A, CNAME, MX, SPF, DMARC, DKIM)
-    const serverIp = '103.175.163.45';
+    const serverIp = networkTelemetry.publicIp || '103.174.102.45';
     const timestamp = Date.now();
     setDnsRecords((prev) => [
       ...prev,

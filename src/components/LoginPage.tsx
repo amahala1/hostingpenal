@@ -217,48 +217,45 @@ export const LoginPage: React.FC = () => {
             {/* Top glowing accent bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 rounded-t-2xl"></div>
 
-            {/* Tab Navigation Switcher */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('login');
-                  setErrorMsg('');
-                }}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-                  activeTab === 'login'
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <Lock className="w-3.5 h-3.5 text-purple-600" />
-                <span>Sign In</span>
-                {isMasterInitialized && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="Master Account Active"></span>
-                )}
-              </button>
+            {/* Tab Navigation Switcher - ONLY shown before master ID creation */}
+            {!isMasterInitialized && (
+              <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl mb-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('login');
+                    setErrorMsg('');
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                    activeTab === 'login'
+                      ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Sign In</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('setup');
-                  setErrorMsg('');
-                }}
-                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-                  activeTab === 'setup'
-                    ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-md shadow-purple-500/20'
-                    : 'text-slate-600 hover:text-purple-600 bg-amber-50/80 border border-amber-200/60'
-                }`}
-              >
-                <Server className="w-3.5 h-3.5" />
-                <span>🚀 VPS Shift & Master Setup</span>
-                {!isMasterInitialized && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('setup');
+                    setErrorMsg('');
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                    activeTab === 'setup'
+                      ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-md shadow-purple-500/20'
+                      : 'text-slate-600 hover:text-purple-600 bg-amber-50/80 border border-amber-200/60'
+                  }`}
+                >
+                  <Server className="w-3.5 h-3.5" />
+                  <span>🚀 VPS Shift & Master Setup</span>
                   <span className="px-1.5 py-0.5 rounded bg-red-500 text-white text-[9px] font-extrabold uppercase animate-pulse">
                     One-Time
                   </span>
-                )}
-              </button>
-            </div>
+                </button>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-700">
@@ -389,25 +386,15 @@ export const LoginPage: React.FC = () => {
                   </button>
                 </form>
 
-                {/* Quick Demo Switcher or Master Reset options */}
+                {/* Bottom Section: Shown pre-setup for quick demo, or clean security status when master active */}
                 <div className="mt-6 pt-5 border-t border-slate-100">
                   {isMasterInitialized ? (
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-slate-800">Master Account Created:</span>
-                        <span className="font-mono text-purple-700 font-bold">{masterAccount?.username || username}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-normal">
-                        All mock models have been purged. You are running in clean VPS Production Mode.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={resetVpsToSetupMode}
-                        className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1.5 pt-1"
-                      >
-                        <RotateCw className="w-3 h-3" />
-                        <span>Re-enable First-Time Master Setup & Shift Mode</span>
-                      </button>
+                    <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                      <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Live Production VPS Active</span>
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-400">HostAdmin v2.5.0 Enterprise</span>
                     </div>
                   ) : (
                     <div>

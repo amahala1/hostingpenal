@@ -140,35 +140,98 @@ export const DashboardOverview: React.FC = () => {
 
   return (
     <div id="ha-section-overview" className="space-y-7 pb-12">
-      {/* Live VPS Hardware & Telemetry Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
-            <Network className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-900 font-mono">
-                Authoritative VPS IP: {networkTelemetry.publicIp}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                Auto-Detected Live
-              </span>
+      {/* Admin Console Exclusive: Server Hardware & Network Infrastructure Bar */}
+      <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-xl space-y-4 border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300">
+              <Server className="w-5 h-5" />
             </div>
-            <p className="text-[11px] text-slate-500 font-mono">
-              Hostname: {networkTelemetry.hostname} • ISP: {networkTelemetry.isp}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold tracking-tight text-white">Server Infrastructure Hardware & Network</h3>
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold">
+                  ADMIN CONSOLE ONLY
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono">
+                Authoritative Host Node: IN-DEL-01 • Nginx & BIND9 Active
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
           <button
             onClick={() => detectServerIpAndMetrics()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-300 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Sync Live Hardware & IP</span>
+            <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+            <span>Sync Server Specs</span>
           </button>
+        </div>
+
+        {/* 4 Dedicated Server Hardware Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Card 1: Server IP */}
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <span>Server Public IP</span>
+              <Network className="w-4 h-4 text-sky-400" />
+            </div>
+            <div className="text-lg font-black font-mono text-sky-300">
+              {networkTelemetry.publicIp}
+            </div>
+            <div className="text-[10px] text-slate-400 font-medium">
+              BIND9 & Nginx Static IP Binding
+            </div>
+          </div>
+
+          {/* Card 2: Server Disk Space */}
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <span>Server Storage (Disk)</span>
+              <HardDrive className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="text-lg font-black font-mono text-amber-300">
+              {metrics.diskUsedGB} GB <span className="text-xs text-slate-400 font-normal">/ {metrics.diskTotalGB} GB</span>
+            </div>
+            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-amber-400 h-full rounded-full"
+                style={{ width: `${((metrics.diskUsedGB / metrics.diskTotalGB) * 100).toFixed(1)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Card 3: Server Bandwidth */}
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <span>Server Bandwidth</span>
+              <Activity className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-lg font-black font-mono text-emerald-300">
+              184.2 GB <span className="text-xs text-slate-400 font-normal">/ 2,000 GB (2TB)</span>
+            </div>
+            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-400 h-full rounded-full" style={{ width: '9.2%' }} />
+            </div>
+          </div>
+
+          {/* Card 4: Server RAM */}
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <span>Server System RAM</span>
+              <Cpu className="w-4 h-4 text-purple-400" />
+            </div>
+            <div className="text-lg font-black font-mono text-purple-300">
+              {(metrics.memoryUsedMB / 1024).toFixed(1)} GB <span className="text-xs text-slate-400 font-normal">/ {(metrics.memoryTotalMB / 1024).toFixed(0)} GB</span>
+            </div>
+            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-purple-400 h-full rounded-full"
+                style={{ width: `${((metrics.memoryUsedMB / metrics.memoryTotalMB) * 100).toFixed(1)}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -25,7 +25,10 @@ export const DnsEditorSection: React.FC = () => {
     domains,
     addToast,
     triggerHaptic,
+    networkTelemetry,
   } = useApp();
+
+  const currentServerIp = networkTelemetry.publicIp || '103.174.102.45';
 
   const [selectedDomain, setSelectedDomain] = useState<string>('sitindia.in');
   const [filterType, setFilterType] = useState<string>('ALL');
@@ -165,34 +168,48 @@ export const DnsEditorSection: React.FC = () => {
             </div>
             <div>
               <div className="text-xs font-bold text-white flex items-center gap-2">
-                <span>Child Nameservers (Glue Records) & BIND9 DNS Engine</span>
+                <span>BIND9 Named Daemon & Nginx DNS Auto-Verification</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] text-emerald-400 font-mono">Port 53 Active (TCP/UDP)</span>
               </div>
               <p className="text-[11px] text-slate-300">
-                Registrar Glue Records point to this VPS. BIND9 authoritatively resolves DNS for <span className="font-mono text-sky-300 font-bold">ns1.sitindia.in</span> & <span className="font-mono text-sky-300 font-bold">ns2.sitindia.in</span>.
+                BIND9 authoritatively resolves DNS zone files for Nginx virtual hosts matching VPS Server IP <span className="font-mono text-emerald-300 font-bold">{currentServerIp}</span>.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-mono font-semibold">
-              Host IP: 103.174.102.45
+            <button
+              onClick={() => {
+                triggerHaptic();
+                addToast({
+                  type: 'success',
+                  title: 'DNS Zones Auto-Verified with BIND9 & Nginx',
+                  message: `Synchronized zone records for ${selectedDomain} with Authoritative Server IP ${currentServerIp}.`,
+                });
+              }}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Verify & Sync BIND9</span>
+            </button>
+            <span className="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 text-sky-300 text-[11px] font-mono font-semibold">
+              IP: {currentServerIp}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-indigo-500/10 text-[11px]">
           <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Child Nameserver 1</div>
-            <div className="font-mono text-sky-400 font-bold">ns1.sitindia.in ➜ 103.174.102.45</div>
+            <div className="text-slate-400 font-medium">Child Nameserver 1 (NS1)</div>
+            <div className="font-mono text-sky-400 font-bold">ns1.sitindia.in ➜ {currentServerIp}</div>
           </div>
           <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Child Nameserver 2</div>
-            <div className="font-mono text-sky-400 font-bold">ns2.sitindia.in ➜ 103.174.102.45</div>
+            <div className="text-slate-400 font-medium">Child Nameserver 2 (NS2)</div>
+            <div className="font-mono text-sky-400 font-bold">ns2.sitindia.in ➜ {currentServerIp}</div>
           </div>
           <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
-            <div className="text-slate-400 font-medium">Roundcube Webmail Record</div>
-            <div className="font-mono text-purple-400 font-bold">webmail.sitindia.in ➜ 103.174.102.45</div>
+            <div className="text-slate-400 font-medium">Nginx & Mail Proxy Binding</div>
+            <div className="font-mono text-purple-400 font-bold">mail.sitindia.in ➜ {currentServerIp}</div>
           </div>
         </div>
       </div>
