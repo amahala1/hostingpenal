@@ -18,7 +18,7 @@ function requireRoot() {
 export function getInstallPlan(name) {
   const packages = PACKAGES[name];
   if (!packages) throw new Error('Unsupported integration');
-  return { integration: name, packages };
+  return { integration: name, packages, routes: { phpMyAdmin: '/phpmyadmin', roundcube: '/webmail' } };
 }
 
 async function packageInstalled(pkg) {
@@ -57,9 +57,21 @@ async function configureNginx({ name }) {
   return { host, root, nginxConfig: file, url: `http://${host}` };
 }
 
-export async function installIntegration(name, { execute = false, configure = true } = {}) {
+async function configureTls(host) {
+  const certbotInstalled = await packageInstalled('certbot');
+  if (!certbotInstalled) {
+    await installPackages(['certbot', 'python3-certbot-nginx']);
+  }
+  await exec('certbot', ['--nginx', '--non-interactive', '--agree-tos', '--register-unsafely-without-email', '--redirect', '-d', host], {
+    timeout: 10 * 60 * 1000,
+    maxBuffer: 4 * 1024 * 1024,
+  });
+  return { enabled: true, url: `https://${host}` };
+}
+
+export async function installIntegration(name, { execute = false, configure = true, tls = false } = {}) {
   const plan = getInstallPlan(name);
-  if (!execute) return { success: true, dryRun: true, ...plan, configure };
+  if (!execute) return { success: true, dryRun: true, ...plan, configure, tls };
   requireRoot();
   const missing = [];
   for (const pkg of plan.packages) {
@@ -67,5 +79,7 @@ export async function installIntegration(name, { execute = false, configure = tr
   }
   if (missing.length) await installPackages(missing);
   const nginx = configure ? await configureNginx({ name }) : null;
-  return { success: true, installed: true, integration: name, packages: plan.packages, nginx };
+  const host = name === 'phpMyAdmin' ? config.phpMyAdminHost : config.webmailHost;
+  const ssl = tls && nginx ? await configureTls(host) : null;
+  return { success: true, installed: true, integration: name, packages: plan.packages, nginx, ssl };
 }
