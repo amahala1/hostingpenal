@@ -77,9 +77,15 @@ app.get('/api/dns/resolve', requireAuth, async (req, res) => {
 
 app.post('/api/domains/provision', requireAuth, async (req, res) => {
   try {
-    const { domain, username, phpSocket } = req.body ?? {};
-    const result = await provisionDomain({ domain: String(domain || '').toLowerCase(), username: String(username || '').toLowerCase(), phpSocket });
-    res.json({ success: true, ...result });
+    const { domain, username, phpSocket, serverIp, issueSsl } = req.body ?? {};
+    const result = await provisionDomain({
+      domain: String(domain || '').toLowerCase(),
+      username: String(username || '').toLowerCase(),
+      phpSocket,
+      serverIp: String(serverIp || config.serverPublicIp || '').trim(),
+      issueSsl: issueSsl === true,
+    });
+    res.json({ success: true, serverHostname: config.serverHostname, ...result });
   } catch (error) {
     console.error('domain provision error', error);
     res.status(400).json({ success: false, message: error?.message || 'Domain provisioning failed' });
