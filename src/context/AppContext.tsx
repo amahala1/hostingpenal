@@ -92,6 +92,12 @@ interface AppContextType {
   login: (username?: string, password?: string) => boolean;
   logout: () => void;
 
+  // VPS Shift & Master Administrator Account Setup
+  isMasterInitialized: boolean;
+  masterAccount: { username: string; email: string; passwordHash: string; createdAt: string } | null;
+  setupMasterAccount: (masterData: { username: string; email: string; password: string; serverHostname?: string }) => void;
+  resetVpsToSetupMode: () => void;
+
   // Navigation & Mode Switcher
   activeSection: NavSection;
   setActiveSection: (sec: NavSection) => void;
@@ -308,6 +314,23 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Master Account Setup & VPS Shift state
+  const [isMasterInitialized, setIsMasterInitialized] = useState<boolean>(() => {
+    return localStorage.getItem('hostadmin_master_initialized') === 'true';
+  });
+
+  const [masterAccount, setMasterAccount] = useState<{ username: string; email: string; passwordHash: string; createdAt: string } | null>(() => {
+    const saved = localStorage.getItem('hostadmin_master_account');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('hostadmin_auth') !== 'false';
@@ -586,6 +609,134 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       category: 'Security',
       severity: 'info',
       details: `User ${userProfile.username} ended active web session.`,
+    });
+  };
+
+  // VPS Shift & Master ID Setup Logic (One-Time Initialization)
+  const setupMasterAccount = (masterData: { username: string; email: string; password: string; serverHostname?: string }) => {
+    const masterInfo = {
+      username: masterData.username,
+      email: masterData.email,
+      passwordHash: masterData.password,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedProfile: UserProfile = {
+      id: 'usr-master-001',
+      username: masterData.username,
+      name: 'Master System Administrator',
+      email: masterData.email,
+      role: 'Super Administrator',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      bio: 'Master VPS System Administrator',
+      language: 'English (US)',
+      timezone: 'Asia/Kolkata (IST)',
+      twoFactorEnabled: false,
+      sessionTimeoutMinutes: 60,
+      themePreference: 'light',
+      fontSizePreference: 'md',
+      hapticFeedback: true,
+      screenReaderOptimized: false,
+      lastLogin: new Date().toISOString(),
+      loginIp: '103.174.102.45',
+    };
+
+    setUserProfile(updatedProfile);
+    setMasterAccount(masterInfo);
+    setIsMasterInitialized(true);
+
+    localStorage.setItem('hostadmin_master_initialized', 'true');
+    localStorage.setItem('hostadmin_master_account', JSON.stringify(masterInfo));
+    localStorage.setItem('hostadmin_user_profile', JSON.stringify(updatedProfile));
+
+    // Delete and purge ALL mock models for clean VPS environment
+    setDomains([]);
+    setDatabases([]);
+    setDbUsers([]);
+    setEmailAccounts([]);
+    setEmailForwarders([]);
+    setAutoresponders([]);
+    setWebmailMessages([]);
+    setFtpAccounts([]);
+    setServerUsers([]);
+    setBackupArchives([]);
+    setBackupSchedules([]);
+    setDnsRecords([]);
+    setSslCertificates([]);
+    setRedirects([]);
+
+    const initialMasterFiles: VirtualFile[] = [
+      {
+        id: 'f-master-root',
+        name: 'index.php',
+        path: `/home/${masterData.username}/public_html/index.php`,
+        type: 'file',
+        size: 340,
+        permissions: '0644',
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        extension: 'php',
+        mimeType: 'text/x-php',
+        content: `<?php\n// HostAdmin Production VPS Environment\necho "<h1>VPS Live Environment Active</h1>";\necho "<p>Master Administrator: <strong>${masterData.username}</strong> (${masterData.email})</p>";\necho "<p>Status: <strong>Clean Production Mode</strong> (All mock models purged)</p>";\n?>`,
+      },
+    ];
+    setFiles(initialMasterFiles);
+
+    localStorage.setItem('hostadmin_domains', JSON.stringify([]));
+    localStorage.setItem('hostadmin_databases', JSON.stringify([]));
+    localStorage.setItem('hostadmin_db_users', JSON.stringify([]));
+    localStorage.setItem('hostadmin_email_accounts', JSON.stringify([]));
+    localStorage.setItem('hostadmin_files', JSON.stringify(initialMasterFiles));
+    localStorage.setItem('hostadmin_ftp_accounts', JSON.stringify([]));
+    localStorage.setItem('hostadmin_server_users', JSON.stringify([]));
+
+    if (masterData.serverHostname) {
+      setNetworkTelemetry((prev) => ({
+        ...prev,
+        hostname: masterData.serverHostname || prev.hostname,
+      }));
+    }
+
+    setIsAuthenticated(true);
+    localStorage.setItem('hostadmin_auth', 'true');
+
+    addAuditLog({
+      action: `Master ID '${masterData.username}' Created & Mock Models Purged`,
+      category: 'Security',
+      severity: 'warning',
+      details: `One-time VPS First-Time Setup completed. All initial demo mock models purged. Master User ID: ${masterData.username}`,
+    });
+
+    addToast({
+      type: 'success',
+      title: 'VPS Master ID Created!',
+      message: `Master Account '${masterData.username}' initialized. All mock models deleted and VPS is live in production mode.`,
+      duration: 6000,
+    });
+  };
+
+  const resetVpsToSetupMode = () => {
+    setIsMasterInitialized(false);
+    setMasterAccount(null);
+    localStorage.removeItem('hostadmin_master_initialized');
+    localStorage.removeItem('hostadmin_master_account');
+    localStorage.removeItem('hostadmin_domains');
+    localStorage.removeItem('hostadmin_databases');
+    localStorage.removeItem('hostadmin_email_accounts');
+    localStorage.removeItem('hostadmin_files');
+    localStorage.removeItem('hostadmin_ftp_accounts');
+    localStorage.removeItem('hostadmin_server_users');
+    localStorage.setItem('hostadmin_auth', 'false');
+    setIsAuthenticated(false);
+
+    setDomains(INITIAL_DOMAINS || []);
+    setDatabases(INITIAL_DATABASES || []);
+    setFiles(INITIAL_FILES || []);
+    setServerUsers(INITIAL_SERVER_USERS || []);
+
+    addToast({
+      type: 'info',
+      title: 'Reset to VPS Setup Mode',
+      message: 'Master account removed. System reset to setup mode.',
     });
   };
 
@@ -2114,6 +2265,11 @@ class PHPMailer {
         isAuthenticated,
         login,
         logout,
+
+        isMasterInitialized,
+        masterAccount,
+        setupMasterAccount,
+        resetVpsToSetupMode,
 
         activeSection,
         setActiveSection,

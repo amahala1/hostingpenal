@@ -14,20 +14,46 @@ import {
   Database,
   Mail,
   Cpu,
+  Trash2,
+  Terminal,
+  Globe,
+  Sliders,
+  RotateCw,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const LoginPage: React.FC = () => {
-  const { login } = useApp();
-  const [username, setUsername] = useState('superadmin');
-  const [password, setPassword] = useState('••••••••••••');
+  const {
+    login,
+    isMasterInitialized,
+    masterAccount,
+    setupMasterAccount,
+    resetVpsToSetupMode,
+  } = useApp();
+
+  // Mode: 'login' or 'setup' (default to 'setup' if master account not yet created)
+  const [activeTab, setActiveTab] = useState<'login' | 'setup'>(
+    isMasterInitialized ? 'login' : 'setup'
+  );
+
+  // Login Form state
+  const [username, setUsername] = useState(masterAccount?.username || 'superadmin');
+  const [password, setPassword] = useState(masterAccount ? '••••••••••••' : '••••••••••••');
   const [twoFactorCode, setTwoFactorCode] = useState('849201');
   const [show2FA, setShow2FA] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Master Setup Form state
+  const [setupUsername, setSetupUsername] = useState('admin');
+  const [setupEmail, setSetupEmail] = useState('admin@vps-server.com');
+  const [setupPassword, setSetupPassword] = useState('');
+  const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
+  const [setupHostname, setSetupHostname] = useState('vps-srv01.sitindia.in');
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
       setErrorMsg('Please provide a valid username or email address.');
@@ -40,6 +66,39 @@ export const LoginPage: React.FC = () => {
       login(username, password);
       setIsLoading(false);
     }, 600);
+  };
+
+  const handleSetupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!setupUsername.trim()) {
+      setErrorMsg('Please enter a valid Master User ID / Username.');
+      return;
+    }
+    if (!setupEmail.trim() || !setupEmail.includes('@')) {
+      setErrorMsg('Please enter a valid root email address.');
+      return;
+    }
+    if (!setupPassword || setupPassword.length < 6) {
+      setErrorMsg('Master password must be at least 6 characters long.');
+      return;
+    }
+    if (setupPassword !== setupConfirmPassword) {
+      setErrorMsg('Passwords do not match. Please re-enter passwords.');
+      return;
+    }
+
+    setErrorMsg('');
+    setIsLoading(true);
+
+    setTimeout(() => {
+      setupMasterAccount({
+        username: setupUsername.trim(),
+        email: setupEmail.trim(),
+        password: setupPassword,
+        serverHostname: setupHostname.trim(),
+      });
+      setIsLoading(false);
+    }, 1200);
   };
 
   const handleQuickLogin = (roleUser: string, roleName: string) => {
@@ -147,20 +206,58 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Login Card */}
+        {/* Right Side: Login / VPS Master Setup Card */}
         <div className="lg:col-span-6">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-200/80 relative"
+            className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-200/80 relative overflow-hidden"
           >
             {/* Top glowing accent bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 rounded-t-2xl"></div>
 
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Sign In to Dashboard</h2>
-              <p className="text-xs text-slate-500 mt-1">Enter your administrative credentials or pick a demo role below.</p>
+            {/* Tab Navigation Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('login');
+                  setErrorMsg('');
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  activeTab === 'login'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5 text-purple-600" />
+                <span>Sign In</span>
+                {isMasterInitialized && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="Master Account Active"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('setup');
+                  setErrorMsg('');
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  activeTab === 'setup'
+                    ? 'bg-gradient-to-r from-amber-500 to-purple-600 text-white shadow-md shadow-purple-500/20'
+                    : 'text-slate-600 hover:text-purple-600 bg-amber-50/80 border border-amber-200/60'
+                }`}
+              >
+                <Server className="w-3.5 h-3.5" />
+                <span>🚀 VPS Shift & Master Setup</span>
+                {!isMasterInitialized && (
+                  <span className="px-1.5 py-0.5 rounded bg-red-500 text-white text-[9px] font-extrabold uppercase animate-pulse">
+                    One-Time
+                  </span>
+                )}
+              </button>
             </div>
 
             {errorMsg && (
@@ -170,144 +267,329 @@ export const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* TAB 1: STANDARD / MASTER LOGIN FORM */}
+            {activeTab === 'login' && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Username or Root Email
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    id="ha-login-username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. superadmin or root@sitindia.in"
-                    className="ha-input pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Master Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShow2FA(!show2FA)}
-                    className="text-xs font-semibold text-purple-600 hover:text-purple-700 underline"
-                  >
-                    {show2FA ? 'Hide 2FA' : '+ Add 2FA Code'}
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    id="ha-login-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="ha-input pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              {show2FA && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="pt-1"
-                >
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Authenticator (TOTP) 6-Digit Token
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="w-4 h-4 text-purple-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      id="ha-login-2fa"
-                      type="text"
-                      maxLength={6}
-                      value={twoFactorCode}
-                      onChange={(e) => setTwoFactorCode(e.target.value)}
-                      placeholder="849201"
-                      className="ha-input pl-10 tracking-widest font-mono text-purple-700 font-bold"
-                    />
+                <div className="mb-5 flex items-start justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Sign In to Control Panel</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Enter your master administrative credentials or demo account.
+                    </p>
                   </div>
-                </motion.div>
-              )}
+                  {isMasterInitialized && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Master Active</span>
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 w-4 h-4"
-                  />
-                  <span className="text-xs font-medium text-slate-600">Keep session active (30 days)</span>
-                </label>
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Username or Master Email
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        id="ha-login-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="e.g. admin or root@vps-srv01"
+                        className="ha-input pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
 
-                <span className="text-xs font-medium text-slate-400">SSL 256-bit Encrypted</span>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Master Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShow2FA(!show2FA)}
+                        className="text-xs font-semibold text-purple-600 hover:text-purple-700 underline"
+                      >
+                        {show2FA ? 'Hide 2FA' : '+ Add 2FA Code'}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        id="ha-login-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="ha-input pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {show2FA && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="pt-1"
+                    >
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Authenticator (TOTP) 6-Digit Token
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="w-4 h-4 text-purple-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          id="ha-login-2fa"
+                          type="text"
+                          maxLength={6}
+                          value={twoFactorCode}
+                          onChange={(e) => setTwoFactorCode(e.target.value)}
+                          placeholder="849201"
+                          className="ha-input pl-10 tracking-widest font-mono text-purple-700 font-bold"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 w-4 h-4"
+                      />
+                      <span className="text-xs font-medium text-slate-600">Keep session active (30 days)</span>
+                    </label>
+
+                    <span className="text-xs font-medium text-slate-400">SSL 256-bit Encrypted</span>
+                  </div>
+
+                  <button
+                    id="ha-btn-submit-login"
+                    type="submit"
+                    disabled={isLoading}
+                    className="ha-btn ha-btn-purple w-full py-3 text-sm font-bold shadow-md shadow-purple-500/25 flex items-center justify-center gap-2 mt-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Authenticating System Session...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Enter Control Panel</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Quick Demo Switcher or Master Reset options */}
+                <div className="mt-6 pt-5 border-t border-slate-100">
+                  {isMasterInitialized ? (
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-800">Master Account Created:</span>
+                        <span className="font-mono text-purple-700 font-bold">{masterAccount?.username || username}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-normal">
+                        All mock models have been purged. You are running in clean VPS Production Mode.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={resetVpsToSetupMode}
+                        className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1.5 pt-1"
+                      >
+                        <RotateCw className="w-3 h-3" />
+                        <span>Re-enable First-Time Master Setup & Shift Mode</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                        ⚡ Quick Demo Login (Pre-Setup)
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleQuickLogin('superadmin', 'Super Admin')}
+                          className="px-2.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
+                        >
+                          <span>👑 SuperAdmin</span>
+                          <span className="text-[10px] text-amber-600 font-medium">Full Root</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleQuickLogin('reseller_pro', 'Reseller')}
+                          className="px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
+                        >
+                          <span>💼 Reseller</span>
+                          <span className="text-[10px] text-purple-600 font-medium">Multi-Tenancy</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleQuickLogin('dev_lead', 'DevOps')}
+                          className="px-2.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
+                        >
+                          <span>💻 DevOps</span>
+                          <span className="text-[10px] text-pink-600 font-medium">App Engine</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            )}
 
-              <button
-                id="ha-btn-submit-login"
-                type="submit"
-                disabled={isLoading}
-                className="ha-btn ha-btn-purple w-full py-3 text-sm font-bold shadow-md shadow-purple-500/25 flex items-center justify-center gap-2 mt-2"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    <span>Authenticating System Session...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Enter Control Panel</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+            {/* TAB 2: ONE-TIME VPS SHIFT & MASTER ID CREATION FORM */}
+            {activeTab === 'setup' && (
+              <div>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                    <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                      First-Time VPS Shift: Create Master ID
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enter master credentials for your live VPS. This is a one-time operation that creates the super administrator account and deletes all mock models.
+                  </p>
+                </div>
 
-            {/* Quick Demo Switcher */}
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                ⚡ 1-Click Quick Demo Sign-In
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('superadmin', 'Super Admin')}
-                  className="px-2.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
-                >
-                  <span>👑 SuperAdmin</span>
-                  <span className="text-[10px] text-amber-600 font-medium">Full Root</span>
-                </button>
+                {/* One-Time Purge Warning Banner */}
+                <div className="p-3 mb-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-900">
+                    <Trash2 className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                    <span>One-Time Action: Purge Mock Models</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-800">
+                    Creating this Master ID will establish your permanent login and <strong>delete all sample/mock domains, databases, email accounts, and test sub-users</strong> to provide a clean production environment.
+                  </p>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('reseller_pro', 'Reseller')}
-                  className="px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
-                >
-                  <span>💼 Reseller</span>
-                  <span className="text-[10px] text-purple-600 font-medium">Multi-Tenancy</span>
-                </button>
+                <form onSubmit={handleSetupSubmit} className="space-y-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Master User ID / Username *
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          id="ha-setup-username"
+                          type="text"
+                          value={setupUsername}
+                          onChange={(e) => setSetupUsername(e.target.value)}
+                          placeholder="e.g. admin or root_master"
+                          className="ha-input pl-9 text-xs font-bold"
+                          required
+                        />
+                      </div>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('dev_lead', 'DevOps')}
-                  className="px-2.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-900 text-xs font-bold transition flex flex-col items-center gap-0.5"
-                >
-                  <span>💻 DevOps</span>
-                  <span className="text-[10px] text-pink-600 font-medium">App Engine</span>
-                </button>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Master Root Email *
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          id="ha-setup-email"
+                          type="email"
+                          value={setupEmail}
+                          onChange={(e) => setSetupEmail(e.target.value)}
+                          placeholder="admin@yourvpsdomain.com"
+                          className="ha-input pl-9 text-xs font-bold"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Create Master Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          id="ha-setup-password"
+                          type="password"
+                          value={setupPassword}
+                          onChange={(e) => setSetupPassword(e.target.value)}
+                          placeholder="At least 6 characters"
+                          className="ha-input pl-9 text-xs"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Confirm Master Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          id="ha-setup-confirm-password"
+                          type="password"
+                          value={setupConfirmPassword}
+                          onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                          placeholder="Re-enter password"
+                          className="ha-input pl-9 text-xs"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      VPS Hostname / Server FQDN (Optional)
+                    </label>
+                    <div className="relative">
+                      <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        id="ha-setup-hostname"
+                        type="text"
+                        value={setupHostname}
+                        onChange={(e) => setSetupHostname(e.target.value)}
+                        placeholder="e.g. vps-srv01.sitindia.in"
+                        className="ha-input pl-9 text-xs font-mono text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    id="ha-btn-submit-master-setup"
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 mt-3 transition"
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Initializing Master ID & Purging Mock Models...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 text-amber-200 fill-amber-200" />
+                        <span>Create Master ID & Initialize Live VPS</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
-            </div>
+            )}
           </motion.div>
         </div>
       </main>
