@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { InstallProgressWidget } from '../InstallProgressWidget';
 import {
   Globe,
   FolderTree,
@@ -140,6 +141,9 @@ export const DashboardOverview: React.FC = () => {
 
   return (
     <div id="ha-section-overview" className="space-y-7 pb-12">
+      {/* Real-time Server Installation Progress Indicator */}
+      <InstallProgressWidget />
+
       {/* Dedicated Real-Time System Health Widget (Fetched from Live Telemetry Data) */}
       <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white shadow-2xl space-y-5 border border-slate-800 relative overflow-hidden">
         {/* Subtle background glow */}

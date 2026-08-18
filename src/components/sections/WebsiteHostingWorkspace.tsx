@@ -28,6 +28,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { InstallProgressWidget } from '../InstallProgressWidget';
 
 export const WebsiteHostingWorkspace: React.FC = () => {
   const {
@@ -124,6 +125,9 @@ export const WebsiteHostingWorkspace: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Real-Time Live Server Installation Script Indicator */}
+      <InstallProgressWidget />
+
       {/* Website Top Status Header */}
       <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">

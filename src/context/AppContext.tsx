@@ -893,8 +893,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }));
     }
 
-    setIsAuthenticated(true);
-    localStorage.setItem('hostadmin_auth', 'true');
+    setIsAuthenticated(false);
+    localStorage.setItem('hostadmin_auth', 'false');
 
     addAuditLog({
       action: `Master ID '${masterData.username}' Created & Mock Models Purged`,
@@ -906,7 +906,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addToast({
       type: 'success',
       title: 'VPS Master ID Created!',
-      message: `Master Account '${masterData.username}' initialized. All mock models deleted and VPS is live in production mode.`,
+      message: `Master Account '${masterData.username}' initialized. All mock models deleted. Please log in with your new credentials.`,
       duration: 6000,
     });
   };
@@ -998,20 +998,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setIsVpsInstalled(true);
     setProductionLiveMode(true);
+    setIsMasterInitialized(true);
     localStorage.setItem('hostadmin_vps_installed', 'true');
     localStorage.setItem('hostadmin_prod_mode', 'true');
+    localStorage.setItem('hostadmin_master_initialized', 'true');
+
+    // Purge ALL demo models and mock data for clean VPS environment
+    setDomains([]);
+    setDatabases([]);
+    setDbUsers([]);
+    setEmailAccounts([]);
+    setEmailForwarders([]);
+    setAutoresponders([]);
+    setWebmailMessages([]);
+    setFtpAccounts([]);
+    setServerUsers([]);
+    setBackupArchives([]);
+    setBackupSchedules([]);
+    setDnsRecords([]);
+    setSslCertificates([]);
+    setRedirects([]);
+
+    localStorage.setItem('hostadmin_domains', JSON.stringify([]));
+    localStorage.setItem('hostadmin_databases', JSON.stringify([]));
+    localStorage.setItem('hostadmin_db_users', JSON.stringify([]));
+    localStorage.setItem('hostadmin_email_accounts', JSON.stringify([]));
+    localStorage.setItem('hostadmin_ftp_accounts', JSON.stringify([]));
+    localStorage.setItem('hostadmin_server_users', JSON.stringify([]));
+
+    // Force sign-in requirement after VPS setup
+    setIsAuthenticated(false);
+    localStorage.setItem('hostadmin_auth', 'false');
 
     addAuditLog({
-      action: 'Automated 1-Click VPS Stack Provisioned',
+      action: 'Automated 1-Click VPS Stack Provisioned & Demos Purged',
       category: 'System',
       severity: 'info',
-      details: 'Apache, Nginx, PHP 8.3, MariaDB, phpMyAdmin, Exim4, Roundcube, and Composer successfully installed.',
+      details: 'Apache, Nginx, PHP 8.3, MariaDB, phpMyAdmin, Exim4, Roundcube, and Composer successfully installed. All initial demo mock models purged.',
     });
 
     addToast({
       type: 'success',
       title: 'VPS Auto-Installation Complete!',
-      message: 'All web servers, database, phpMyAdmin, mail, and dependencies are 100% active and running live.',
+      message: 'All web servers, database, phpMyAdmin, and mail stack active. Demos removed. Please log in.',
+      duration: 7000,
     });
   };
 

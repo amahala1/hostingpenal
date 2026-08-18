@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { X, LogOut } from 'lucide-react';
 import { NavSection } from '../types';
+import { InstallProgressWidget } from './InstallProgressWidget';
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -380,6 +381,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
               </div>
             </div>
           ))}
+
+          {/* Real-time Server Installation Progress Indicator */}
+          <InstallProgressWidget />
         </div>
 
         {/* User Card & Logout Footer */}
