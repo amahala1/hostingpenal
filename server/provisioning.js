@@ -9,12 +9,8 @@ const execFileAsync = promisify(execFile);
 const domainPattern = /^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;
 const usernamePattern = /^[a-z][a-z0-9_-]{2,31}$/;
 
-function validateDomain(domain) {
-  if (!domainPattern.test(domain)) throw new Error('Invalid domain name');
-}
-function validateUsername(username) {
-  if (!usernamePattern.test(username)) throw new Error('Invalid hosting username');
-}
+function validateDomain(domain) { if (!domainPattern.test(domain)) throw new Error('Invalid domain name'); }
+function validateUsername(username) { if (!usernamePattern.test(username)) throw new Error('Invalid hosting username'); }
 function shellSafePath(value) { return path.resolve(value); }
 
 export function getDocumentRoot(username, domain) {
@@ -32,14 +28,13 @@ export function renderNginxServerBlock({ domain, username, phpSocket }) {
   return `server {\n  listen 80;\n  listen [::]:80;\n  server_name ${domain} www.${domain};\n  root ${root};\n  index index.php index.html index.htm;\n\n  location / { try_files $uri $uri/ /index.php?$query_string; }\n  location ~ \\.php$ { include snippets/fastcgi-php.conf; fastcgi_pass unix:${socket}; }\n  location ~ /\\.(?!well-known).* { deny all; }\n}\n`;
 }
 
-async function commandExists(command) {
-  try { await execFileAsync('sh', ['-lc', `command -v ${command}`]); return true; } catch { return false; }
-}
+async function commandExists(command) { try { await execFileAsync('sh', ['-lc', `command -v ${command}`]); return true; } catch { return false; } }
+async function reloadNginx() { await execFileAsync(config.nginxBinary, ['-t']); await execFileAsync(config.nginxBinary, ['-s', 'reload']); }
 
 async function issueLetsEncrypt(domain) {
   if (!(await commandExists('certbot'))) return { status: 'pending', message: 'certbot is not installed; SSL provisioning is pending.' };
   try {
-    await execFileAsync('certbot', ['--nginx', '--non-interactive', '--agree-tos', '--redirect', '--register-unsafely-without-email', '-d', domain, '-d', `www.${domain}`], { timeout: 120000 });
+    await execFileAsync('certbot', ['--nginx', '--non-interactive', '--agree-tos', '--redirect', '--register-unsafely-without-email', '-d', domain], { timeout: 120000 });
     return { status: 'active', message: "Let's Encrypt certificate issued and HTTPS redirect enabled." };
   } catch (error) { return { status: 'pending', message: error?.message || "Let's Encrypt provisioning failed." }; }
 }
@@ -61,22 +56,34 @@ export async function provisionDomain({ domain, username, phpSocket, serverIp, i
   validateDomain(domain); validateUsername(username);
   const documentRoot = getDocumentRoot(username, domain);
   await fs.mkdir(documentRoot, { recursive: true, mode: 0o755 });
-
   const indexPath = path.join(documentRoot, 'index.html');
-  try { await fs.access(indexPath); } catch {
-    await fs.writeFile(indexPath, `<!doctype html><html><head><meta charset="utf-8"><title>${domain}</title></head><body><h1>${domain}</h1><p>Website ready.</p></body></html>\n`, { mode: 0o644 });
-  }
-
+  try { await fs.access(indexPath); } catch { await fs.writeFile(indexPath, `<!doctype html><html><head><meta charset="utf-8"><title>${domain}</title></head><body><h1>${domain}</h1><p>Website ready.</p></body></html>\n`, { mode: 0o644 }); }
   const nginxPath = path.join(config.nginxSitesAvailable, `${domain}.conf`);
   const nginxEnabledPath = path.join(config.nginxSitesEnabled, `${domain}.conf`);
   await fs.writeFile(nginxPath, renderNginxServerBlock({ domain, username, phpSocket }), { mode: 0o644 });
-  await fs.rm(nginxEnabledPath, { force: true });
-  await fs.symlink(nginxPath, nginxEnabledPath);
-  await execFileAsync(config.nginxBinary, ['-t']);
-  await execFileAsync(config.nginxBinary, ['-s', 'reload']);
-
-  let dns = { status: 'skipped' };
-  if (serverIp) dns = { status: 'active', ...(await writeZone(domain, defaultDnsRecords(domain, serverIp))) };
+  await fs.rm(nginxEnabledPath, { force: true }); await fs.symlink(nginxPath, nginxEnabledPath); await reloadNginx();
+  let dns = { status: 'skipped' }; if (serverIp) dns = { status: 'active', ...(await writeZone(domain, defaultDnsRecords(domain, serverIp))) };
   const ssl = issueSsl ? await issueLetsEncrypt(domain) : { status: 'not-requested' };
   return { domain, username, documentRoot, nginxPath, enabled: true, dns, ssl };
+}
+
+export async function provisionSubdomain({ subdomain, parentDomain, username, phpSocket, serverIp, dnsType = 'A', dnsTarget, issueSsl = false }) {
+  validateDomain(parentDomain);
+  const prefix = String(subdomain || '').trim().toLowerCase();
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(prefix)) throw new Error('Invalid subdomain prefix');
+  const domain = `${prefix}.${parentDomain}`;
+  validateDomain(domain); validateUsername(username);
+  const documentRoot = getDocumentRoot(username, domain);
+  await fs.mkdir(documentRoot, { recursive: true, mode: 0o755 });
+  const indexPath = path.join(documentRoot, 'index.html');
+  try { await fs.access(indexPath); } catch { await fs.writeFile(indexPath, `<!doctype html><html><head><meta charset="utf-8"><title>${domain}</title></head><body><h1>${domain}</h1><p>Subdomain ready.</p></body></html>\n`, { mode: 0o644 }); }
+  const nginxPath = path.join(config.nginxSitesAvailable, `${domain}.conf`);
+  const nginxEnabledPath = path.join(config.nginxSitesEnabled, `${domain}.conf`);
+  await fs.writeFile(nginxPath, renderNginxServerBlock({ domain, username, phpSocket }), { mode: 0o644 });
+  await fs.rm(nginxEnabledPath, { force: true }); await fs.symlink(nginxPath, nginxEnabledPath); await reloadNginx();
+  const target = dnsTarget || (dnsType === 'CNAME' ? `${parentDomain}.` : serverIp);
+  if (!target) throw new Error('DNS target is required');
+  const dns = await writeZone(parentDomain, [{ name: prefix, type: dnsType, value: target, ttl: 3600 }]);
+  const ssl = issueSsl ? await issueLetsEncrypt(domain) : { status: 'not-requested' };
+  return { domain, parentDomain, username, documentRoot, nginxPath, dnsType, dnsTarget: target, enabled: true, dns: { status: 'active', ...dns }, ssl };
 }
