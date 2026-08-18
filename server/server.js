@@ -5,6 +5,8 @@ import { config } from './config.js';
 import { cookieOptions, createSession, destroySession, requireAuth, verifyMasterCredentials } from './auth.js';
 import { readZone, writeZone } from './dns.js';
 import { provisionDomain } from './provisioning.js';
+import { getIntegrationStatus } from './services/integrations.js';
+import { getInstallPlan, installIntegration } from './services/integration-install.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -81,6 +83,38 @@ app.post('/api/domains/provision', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('domain provision error', error);
     res.status(400).json({ success: false, message: error?.message || 'Domain provisioning failed' });
+  }
+});
+
+app.get('/api/integrations/status', requireAuth, async (_req, res) => {
+  try {
+    res.json({ success: true, ...(await getIntegrationStatus()) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error?.message || 'Integration status failed' });
+  }
+});
+
+app.get('/api/integrations/:name/install-plan', requireAuth, (req, res) => {
+  try {
+    res.json({ success: true, ...getInstallPlan(req.params.name) });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error?.message || 'Unsupported integration' });
+  }
+});
+
+app.post('/api/integrations/:name/install', requireAuth, async (req, res) => {
+  try {
+    const execute = req.body?.execute === true;
+    if (execute && req.user.username !== config.masterUsername) return res.status(403).json({ success: false, message: 'Super Administrator required' });
+    const result = await installIntegration(req.params.name, {
+      execute,
+      configure: req.body?.configure !== false,
+      tls: req.body?.tls === true,
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('integration install error', error);
+    res.status(400).json({ success: false, message: error?.message || 'Integration installation failed' });
   }
 });
 

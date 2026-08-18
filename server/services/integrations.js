@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { config } from '../config.js';
 
 const execAsync = promisify(execFile);
 
@@ -22,6 +23,15 @@ async function serviceActive(service) {
   }
 }
 
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function getIntegrationStatus() {
   const [mysql, mariadb, php, postfix, dovecot, nginx] = await Promise.all([
     commandAvailable('mysql'),
@@ -32,32 +42,26 @@ export async function getIntegrationStatus() {
     serviceActive('nginx'),
   ]);
 
-  const phpMyAdminInstalled = await fileExists('/usr/share/phpmyadmin');
-  const roundcubeInstalled = await fileExists('/var/lib/roundcube') || await fileExists('/usr/share/roundcube');
+  const [phpMyAdminInstalled, roundcubeInstalled] = await Promise.all([
+    fileExists(config.phpMyAdminRoot),
+    fileExists(config.roundcubeRoot) || fileExists('/usr/share/roundcube'),
+  ]);
 
   return {
     phpMyAdmin: {
       installed: phpMyAdminInstalled,
       databaseReady: mysql || mariadb,
       phpReady: php,
-      route: '/phpmyadmin',
+      nginxReady: nginx,
+      url: `http://${config.phpMyAdminHost}`,
     },
     roundcube: {
       installed: roundcubeInstalled,
       imapReady: dovecot,
       smtpReady: postfix,
       phpReady: php,
-      route: '/webmail',
+      nginxReady: nginx,
+      url: `http://${config.webmailHost}`,
     },
-    nginx: { active: nginx },
   };
-}
-
-async function fileExists(path) {
-  try {
-    await fs.access(path);
-    return true;
-  } catch {
-    return false;
-  }
 }
