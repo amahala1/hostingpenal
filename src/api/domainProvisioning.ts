@@ -4,6 +4,8 @@ export type DomainProvisionInput = {
   domain: string;
   username: string;
   phpVersion?: string;
+  serverIp?: string;
+  issueSsl?: boolean;
 };
 
 const PHP_SOCKET_BY_VERSION: Record<string, string> = {
@@ -26,5 +28,8 @@ export async function provisionDomain(input: DomainProvisionInput) {
   }
 
   const phpSocket = PHP_SOCKET_BY_VERSION[input.phpVersion || '8.3'] || PHP_SOCKET_BY_VERSION['8.3'];
-  return hostingApi.provisionDomain(domain, username, phpSocket);
+  return hostingApi.provisionDomain(domain, username, phpSocket, {
+    serverIp: input.serverIp,
+    issueSsl: input.issueSsl === true,
+  });
 }
