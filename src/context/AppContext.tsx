@@ -375,10 +375,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // VPS Network & Live Hardware Telemetry
   const [networkTelemetry, setNetworkTelemetry] = useState<VpsNetworkTelemetry>({
-    publicIp: '103.174.102.45',
+    publicIp: '168.220.248.86',
     ipv6: '2400:cb00:2048:1::c629:d7a2',
-    hostname: 'vps-srv01.sitindia.in',
-    gateway: '103.174.102.1',
+    hostname: 'server1.sitindia.in',
+    gateway: '168.220.248.1',
     isp: 'SIT Cloud Network / Reliance Infocomm Tier-4 DC',
     location: 'Mumbai (Asia/Kolkata), India',
     autoDetected: true,
@@ -393,10 +393,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Server Hardware Telemetry & Metrics Update
   const detectServerIpAndMetrics = async () => {
-    // Keep Authoritative VPS Server IP: 103.174.102.45 (Not Client IP)
+    // Keep Authoritative VPS Server IP: 168.220.248.86 (Not Client IP)
     setNetworkTelemetry((prev) => ({
       ...prev,
-      publicIp: '103.174.102.45',
+      publicIp: '168.220.248.86',
       autoDetected: true,
       lastChecked: new Date().toLocaleTimeString(),
     }));
@@ -625,7 +625,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     customLaunchText?: string
   ) => {
     const displayName = title || packageName;
-    const ip = networkTelemetry.publicIp || '103.174.102.45';
+    const ip = networkTelemetry.publicIp || '168.220.248.86';
 
     let launchUrl = customLaunchUrl;
     let launchText = customLaunchText;
@@ -835,7 +835,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       hapticFeedback: true,
       screenReaderOptimized: false,
       lastLogin: new Date().toISOString(),
-      loginIp: '103.174.102.45',
+      loginIp: '168.220.248.86',
     };
 
     setUserProfile(updatedProfile);
@@ -939,7 +939,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Launch 1-Click phpMyAdmin (Directory Installation with direct Database targeting)
   const launchPhpMyAdmin = (dbName?: string) => {
-    const ip = networkTelemetry.publicIp || '103.174.102.45';
+    const ip = networkTelemetry.publicIp || '168.220.248.86';
 
     // 1. Strict Dependency Check: Block external link if phpMyAdmin is not installed on VPS
     if (!isPhpMyAdminInstalled && !isVpsInstalled) {
@@ -1510,7 +1510,7 @@ class PHPMailer {
     createFile(`${dom.docRoot}`, 'index.php', `<?php echo "<h1>Welcome to ${cleanDomain}</h1>";`);
 
     // Automatic DNS zone creation (A, CNAME, MX, SPF, DMARC, DKIM)
-    const serverIp = networkTelemetry.publicIp || '103.174.102.45';
+    const serverIp = networkTelemetry.publicIp || '168.220.248.86';
     const timestamp = Date.now();
     setDnsRecords((prev) => [
       ...prev,

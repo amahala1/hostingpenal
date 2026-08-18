@@ -66,7 +66,7 @@ export const LoginPage: React.FC = () => {
         {/* Node Status Badge */}
         <div className="hidden sm:flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Node: <strong className="text-purple-700 font-bold">IN-DEL-01</strong> (103.174.102.45)</span>
+          <span>Node: <strong className="text-purple-700 font-bold">server1.sitindia.in</strong> (168.220.248.86)</span>
           <span className="text-slate-300">|</span>
           <span className="text-emerald-600 font-bold">SSL Encrypted</span>
         </div>

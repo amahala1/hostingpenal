@@ -30,7 +30,7 @@ export const DnsEditorSection: React.FC = () => {
     networkTelemetry,
   } = useApp();
 
-  const currentServerIp = networkTelemetry.publicIp || '103.174.102.45';
+  const currentServerIp = networkTelemetry.publicIp || '168.220.248.86';
 
   const [selectedDomain, setSelectedDomain] = useState<string>('sitindia.in');
   const [filterType, setFilterType] = useState<string>('ALL');

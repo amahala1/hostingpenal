@@ -43,7 +43,7 @@ export const PluginsSection: React.FC = () => {
   };
 
   const getPluginLaunchUrl = (plugin: SystemPlugin): { url: string; label: string; action?: () => void } | null => {
-    const ip = networkTelemetry.publicIp || '103.174.102.45';
+    const ip = networkTelemetry.publicIp || '168.220.248.86';
     const lowerName = plugin.name.toLowerCase();
 
     if (lowerName.includes('phpmyadmin')) {

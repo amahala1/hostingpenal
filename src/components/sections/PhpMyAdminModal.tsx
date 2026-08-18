@@ -125,7 +125,7 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
 
           <div className="flex items-center gap-2">
             <a
-              href={`https://${networkTelemetry.publicIp || '103.174.102.45'}/phpmyadmin/`}
+              href={`https://${networkTelemetry.publicIp || '168.220.248.86'}/phpmyadmin/`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-full text-xs font-black transition shadow"
