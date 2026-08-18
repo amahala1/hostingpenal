@@ -22,4 +22,10 @@ export const config = {
   nginxBinary: process.env.NGINX_BINARY || 'nginx',
   nginxReloadBinary: process.env.NGINX_RELOAD_BINARY || 'systemctl',
   defaultPhpSocket: process.env.DEFAULT_PHP_SOCKET || '/run/php/php8.3-fpm.sock',
+  phpMyAdminRoot: process.env.PHPMYADMIN_ROOT || '/usr/share/phpmyadmin',
+  roundcubeRoot: process.env.ROUNDCUBE_ROOT || '/var/lib/roundcube',
+  phpMyAdminHost: process.env.PHPMYADMIN_HOST || 'phpmyadmin.sitindia.in',
+  webmailHost: process.env.WEBMAIL_HOST || 'webmail.sitindia.in',
+  integrationSitesAvailable: process.env.INTEGRATION_SITES_AVAILABLE || '/etc/nginx/sites-available',
+  integrationSitesEnabled: process.env.INTEGRATION_SITES_ENABLED || '/etc/nginx/sites-enabled',
 };
