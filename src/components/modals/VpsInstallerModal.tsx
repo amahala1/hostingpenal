@@ -43,15 +43,15 @@ export const VpsInstallerModal: React.FC<{ isOpen: boolean; onClose: () => void 
   };
 
   const stackItems = [
-    { title: 'Apache 2.4 & Nginx HTTP Engine', desc: 'Reverse proxy, event MPM, HTTP/2, Brotli compression' },
-    { title: 'PHP 8.2 & PHP 8.3 FPM Multi-Runtime', desc: 'pdo_mysql, mbstring, gd, zip, xml, opcache, curl' },
-    { title: 'MariaDB 10.11 Enterprise Database', desc: 'InnoDB engine, utf8mb4 collation, socket auth' },
+    { title: 'Apache 2.4 & Nginx HTTP Engine', desc: 'Reverse proxy, event MPM, HTTP/2, Brotli compression (Ports 80, 443)' },
+    { title: 'PHP 8.2 & PHP 8.3 FPM Multi-Runtime', desc: 'php-imap, mbstring, pdo_mysql, intl, gd, zip, xml, opcache, curl' },
+    { title: 'MariaDB 10.11 Enterprise Database', desc: 'InnoDB engine, utf8mb4 collation, roundcubemail & app databases' },
     { title: 'phpMyAdmin 5.2.2 Web Interface', desc: '1-Click root/user access with blowfish encryption' },
-    { title: 'Exim4 MTA & Dovecot IMAP Webmail', desc: 'SMTP TLS on port 587, IMAP SSL 993, DKIM & SPF' },
-    { title: 'Roundcube Webmail Engine', desc: 'Dedicated webmail portal with modern light UI' },
-    { title: 'Composer 2.7.7 CLI & Dependencies', desc: 'Auto-dependency resolver for PHP applications' },
+    { title: 'Postfix MTA & Dovecot IMAP Server', desc: 'SMTP TLS on port 587/465, IMAP SSL 993, OpenDKIM & SPF' },
+    { title: 'Roundcube Webmail Engine', desc: 'Automated DB setup, PHP-IMAP link, SSL certificates for webmail subdomain' },
+    { title: 'BIND9 Authoritative DNS Server', desc: 'Port 53 UDP/TCP handler for Child Nameservers (ns1/ns2.sitindia.in)' },
     { title: 'Certbot Let\'s Encrypt AutoSSL', desc: 'Automated 90-day SSL renewal daemon & HTTPS redirects' },
-    { title: 'UFW Firewall & Fail2Ban Protection', desc: 'Port rules, brute-force jail, rate limiting' },
+    { title: 'UFW Firewall (All Ports Auto-Opened)', desc: 'Ports 22, 53, 80, 443, 25, 587, 465, 143, 993, 110, 995, 3306' },
   ];
 
   return (

@@ -28,6 +28,8 @@ import {
   AuditLogEntry,
   UserProfile,
   SystemVersionInfo,
+  ServerAccountUser,
+  VpsNetworkTelemetry,
 } from '../types';
 import {
   INITIAL_DOMAINS,
@@ -50,6 +52,7 @@ import {
   INITIAL_AUDIT_LOGS,
   INITIAL_USER_PROFILE,
   INITIAL_SYSTEM_VERSION,
+  INITIAL_SERVER_USERS,
 } from '../data/mockData';
 
 export interface ToastNotification {
@@ -89,9 +92,12 @@ interface AppContextType {
   login: (username?: string, password?: string) => boolean;
   logout: () => void;
 
-  // Navigation & UI state
+  // Navigation & Mode Switcher
   activeSection: NavSection;
   setActiveSection: (sec: NavSection) => void;
+  panelMode: 'admin' | 'user';
+  setPanelMode: (mode: 'admin' | 'user') => void;
+  activeUserAccount: ServerAccountUser | null;
   selectedDomain: string;
   setSelectedDomain: (dom: string) => void;
   commandPaletteOpen: boolean;
@@ -101,13 +107,23 @@ interface AppContextType {
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (val: boolean) => void;
 
+  // User Accounts & Sub-user Management
+  serverUsers: ServerAccountUser[];
+  createServerUser: (user: Omit<ServerAccountUser, 'id' | 'createdAt' | 'diskUsedMB' | 'bandwidthUsedMB' | 'dbCount' | 'emailCount' | 'ftpCount'>) => void;
+  updateServerUser: (id: string, updates: Partial<ServerAccountUser>) => void;
+  deleteServerUser: (id: string) => void;
+  toggleUserStatus: (id: string) => void;
+  loginAsUser: (username: string) => void;
+  returnToAdmin: () => void;
+
+  // Live VPS Hardware & Auto IP Telemetry
+  networkTelemetry: VpsNetworkTelemetry;
+  detectServerIpAndMetrics: () => Promise<void>;
+
   // Modals for 1-Click Tools
   phpMyAdminModalOpen: boolean;
   setPhpMyAdminModalOpen: (open: boolean) => void;
   launchPhpMyAdmin: (dbName?: string) => void;
-  phpMailerModalOpen: boolean;
-  setPhpMailerModalOpen: (open: boolean) => void;
-  launchPhpMailerTest: () => void;
   vpsInstallerModalOpen: boolean;
   setVpsInstallerModalOpen: (open: boolean) => void;
   launchVpsInstaller: () => void;
@@ -167,7 +183,12 @@ interface AppContextType {
   files: VirtualFile[];
   activeFilePath: string;
   setActiveFilePath: (path: string) => void;
-  createFile: (path: string, name: string, content?: string) => void;
+  createFile: (path: string, name: string, content?: string, overwrite?: boolean) => void;
+  uploadMultipleFiles: (
+    path: string,
+    filesList: Array<{ name: string; content: string; size?: number; mimeType?: string }>,
+    overwriteExisting?: boolean
+  ) => void;
   createFolder: (path: string, name: string) => void;
   updateFileContent: (id: string, content: string) => void;
   deleteFile: (id: string) => void;
@@ -223,16 +244,6 @@ interface AppContextType {
   markMessageRead: (id: string, read: boolean) => void;
   toggleMessageStarred: (id: string) => void;
   deleteWebmailMessage: (id: string) => void;
-  sendPhpMailerTest: (config: {
-    host: string;
-    port: number;
-    encryption: 'ssl' | 'tls' | 'none';
-    username: string;
-    fromEmail: string;
-    toEmail: string;
-    subject: string;
-    body: string;
-  }) => Promise<{ success: boolean; log: string[] }>;
 
   // SSL & Security
   sslCertificates: SslCertificate[];
@@ -302,16 +313,103 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return localStorage.getItem('hostadmin_auth') !== 'false';
   });
 
-  // Navigation
+  // Navigation & Panel Mode Switcher
   const [activeSection, setActiveSection] = useState<NavSection>('overview');
+  const [panelMode, setPanelMode] = useState<'admin' | 'user'>('admin');
+  const [activeUserAccount, setActiveUserAccount] = useState<ServerAccountUser | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('sitindia.in');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickActionModal, setQuickActionModal] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Server Accounts & Sub-users
+  const [serverUsers, setServerUsers] = useState<ServerAccountUser[]>(() => {
+    const saved = localStorage.getItem('hostadmin_server_users');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // fallback
+      }
+    }
+    return INITIAL_SERVER_USERS;
+  });
+
+  // Save serverUsers
+  useEffect(() => {
+    localStorage.setItem('hostadmin_server_users', JSON.stringify(serverUsers));
+  }, [serverUsers]);
+
+  // VPS Network & Live Hardware Telemetry
+  const [networkTelemetry, setNetworkTelemetry] = useState<VpsNetworkTelemetry>({
+    publicIp: '103.174.102.45',
+    ipv6: '2400:cb00:2048:1::c629:d7a2',
+    hostname: 'vps-srv01.sitindia.in',
+    gateway: '103.174.102.1',
+    isp: 'SIT Cloud Network / Reliance Infocomm Tier-4 DC',
+    location: 'Mumbai (Asia/Kolkata), India',
+    autoDetected: true,
+    lastChecked: new Date().toLocaleTimeString(),
+    totalRamMB: 16384,
+    usedRamMB: 3840,
+    totalDiskGB: 200,
+    usedDiskGB: 48.2,
+    cpuLoadPercent: 14.8,
+    activeProcesses: 142,
+  });
+
+  // Auto Detect IP & Hardware Metrics
+  const detectServerIpAndMetrics = async () => {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ip) {
+          setNetworkTelemetry((prev) => ({
+            ...prev,
+            publicIp: data.ip,
+            autoDetected: true,
+            lastChecked: new Date().toLocaleTimeString(),
+          }));
+        }
+      }
+    } catch (e) {
+      // Fallback retains primary VPS authoritative IP
+    }
+
+    // Calculate live disk and ram based on database, files, and services
+    const filesSizeMB = files.reduce((acc, f) => acc + (f.size / (1024 * 1024)), 0);
+    const dbSizeMB = databases.reduce((acc, d) => acc + d.sizeMB, 0);
+    const calculatedDiskGB = parseFloat((42.0 + (filesSizeMB + dbSizeMB) / 1024).toFixed(1));
+    const calculatedRamMB = services.filter((s) => s.status === 'running').reduce((acc, s) => acc + s.memoryMB, 0) + 1200;
+
+    setNetworkTelemetry((prev) => ({
+      ...prev,
+      usedDiskGB: calculatedDiskGB,
+      usedRamMB: calculatedRamMB,
+      lastChecked: new Date().toLocaleTimeString(),
+    }));
+
+    setMetrics((prev) => ({
+      ...prev,
+      diskUsedGB: calculatedDiskGB,
+      memoryUsedMB: calculatedRamMB,
+    }));
+
+    addToast({
+      type: 'success',
+      title: 'VPS Live Metrics & IP Synchronized',
+      message: `Authoritative IP: ${networkTelemetry.publicIp} • Live RAM: ${calculatedRamMB} MB / 16384 MB • Live Storage: ${calculatedDiskGB} GB / 200 GB`,
+    });
+  };
+
+  // Auto detect once on mount
+  useEffect(() => {
+    detectServerIpAndMetrics();
+  }, []);
+
   // 1-Click Modals
   const [phpMyAdminModalOpen, setPhpMyAdminModalOpen] = useState(false);
-  const [phpMailerModalOpen, setPhpMailerModalOpen] = useState(false);
   const [vpsInstallerModalOpen, setVpsInstallerModalOpen] = useState(false);
   const [isVpsInstalled, setIsVpsInstalled] = useState<boolean>(() => {
     return localStorage.getItem('hostadmin_vps_installed') === 'true';
@@ -515,16 +613,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
-  const launchPhpMailerTest = () => {
-    setActiveSection('email');
-    setPhpMailerModalOpen(true);
-    addToast({
-      type: 'info',
-      title: 'PHPMailer Diagnostics Opened',
-      message: 'Ready to test SMTP handshake and DKIM signing.',
-    });
-  };
-
   const launchVpsInstaller = () => {
     setVpsInstallerModalOpen(true);
   };
@@ -538,14 +626,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     ]);
 
     const steps = [
-      { pct: 15, msg: '[STEP 1/8] Installing Apache 2.4 & Nginx HTTP reverse proxy engine...' },
-      { pct: 30, msg: '[STEP 2/8] Compiling PHP 8.2 & PHP 8.3 FPM with modules: pdo_mysql, mbstring, curl, gd, zip, xml, opcache...' },
-      { pct: 45, msg: '[STEP 3/8] Deploying MariaDB 10.11 Enterprise Server & configuring unix_socket auth...' },
-      { pct: 60, msg: '[STEP 4/8] Installing phpMyAdmin 5.2.2 Web Interface with blowfish_secret auto-encryption...' },
-      { pct: 75, msg: '[STEP 5/8] Setting up Exim4 MTA + Dovecot IMAP Server + Roundcube Webmail engine...' },
-      { pct: 85, msg: '[STEP 6/8] Installing Composer 2.7.7 CLI & auto-dependency resolver libraries...' },
-      { pct: 95, msg: '[STEP 7/8] Configuring Certbot Let\'s Encrypt AutoSSL Wildcard SAN certificate daemon...' },
-      { pct: 100, msg: '[STEP 8/8] Hardening UFW firewall (Ports 80, 443, 22, 25, 587, 993, 3306) & starting services!' },
+      { pct: 10, msg: '[STEP 1/10] UFW Firewall Configuration: Opening Ports 80 (HTTP), 443 (HTTPS), 25 (SMTP), 587 (Submission), 465 (SMTPS), 143 (IMAP), 993 (IMAPS), 110 (POP3), 995 (POP3S), 53 (DNS UDP/TCP), 3306 (MySQL), 22 (SSH)...' },
+      { pct: 20, msg: '[STEP 2/10] Deploying Apache 2.4 & Nginx Reverse Proxy with VirtualHost reverse routing for webmail.sitindia.in...' },
+      { pct: 30, msg: '[STEP 3/10] Installing PHP 8.2 & PHP 8.3 FPM + Roundcube Modules: php-imap, php-mbstring, php-xml, php-intl, php-zip, php-curl, php-gd, php-pdo-mysql, php-imagick...' },
+      { pct: 42, msg: '[STEP 4/10] Deploying MariaDB 10.11 Server: Creating `roundcubemail` database, dedicated DB user & importing initial table schema...' },
+      { pct: 54, msg: '[STEP 5/10] Installing phpMyAdmin 5.2.2 Web Interface with blowfish_secret auto-encryption & SSO link...' },
+      { pct: 65, msg: '[STEP 6/10] Configuring BIND9 Authoritative DNS Server on Port 53 (UDP/TCP) for Child Nameservers ns1.sitindia.in & ns2.sitindia.in...' },
+      { pct: 76, msg: '[STEP 7/10] Configuring Postfix MTA, Dovecot IMAP/POP3 Server, SASL Auth, OpenDKIM Key Generation & SPF records...' },
+      { pct: 88, msg: '[STEP 8/10] Configuring Roundcube Webmail Engine: Setting default_host=ssl://localhost:993, smtp_server=tls://localhost:587, plugins (archive, zipdownload, password)...' },
+      { pct: 95, msg: '[STEP 9/10] Issuing Let\'s Encrypt AutoSSL Wildcard SAN Certificates for sitindia.in, mail.sitindia.in, webmail.sitindia.in...' },
+      { pct: 100, msg: '[STEP 10/10] System Service Auto-Start: systemctl enable --now named postfix dovecot apache2 php8.2-fpm php8.3-fpm mariadb opendkim ufw fail2ban!' },
     ];
 
     for (const step of steps) {
@@ -588,7 +678,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setCommandPaletteOpen(false);
         setQuickActionModal(null);
         setPhpMyAdminModalOpen(false);
-        setPhpMailerModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -627,6 +716,122 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // speech synthesis fallback
       }
     }
+  };
+
+  // User Management Methods
+  const createServerUser = (userData: Omit<ServerAccountUser, 'id' | 'createdAt' | 'diskUsedMB' | 'bandwidthUsedMB' | 'dbCount' | 'emailCount' | 'ftpCount'>) => {
+    const newUser: ServerAccountUser = {
+      id: `usr-${Date.now()}`,
+      ...userData,
+      diskUsedMB: 0,
+      bandwidthUsedMB: 0,
+      dbCount: 0,
+      emailCount: 0,
+      ftpCount: 0,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    setServerUsers((prev) => [newUser, ...prev]);
+
+    // Also add domain for this user if specified
+    if (userData.domain) {
+      addDomain({
+        domain: userData.domain,
+        type: 'main',
+        docRoot: `/home/${userData.username}/public_html`,
+        phpVersion: userData.phpVersion || '8.3',
+        sslStatus: userData.sslEnabled ? 'active' : 'none',
+        sslIssuer: userData.sslEnabled ? "Let's Encrypt Authority X3" : undefined,
+        forceHttps: userData.sslEnabled,
+        bandwidthLimitMB: userData.bandwidthQuotaMB,
+        diskLimitMB: userData.diskQuotaMB,
+        directoryPrivacyEnabled: false,
+      });
+    }
+
+    addAuditLog({
+      action: `Created Server User Account: ${userData.username}`,
+      category: 'User Management',
+      severity: 'info',
+      details: `Allocated Package: ${userData.packageName}, Domain: ${userData.domain}, Disk Quota: ${userData.diskQuotaMB} MB, Bandwidth: ${userData.bandwidthQuotaMB} MB, SSH: ${userData.sshAccess ? 'Enabled' : 'Disabled'}`,
+    });
+
+    addToast({
+      type: 'success',
+      title: 'User Account Provisioned',
+      message: `User '${userData.username}' successfully created with docRoot /home/${userData.username}/public_html`,
+    });
+  };
+
+  const updateServerUser = (id: string, updates: Partial<ServerAccountUser>) => {
+    setServerUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, ...updates } : u))
+    );
+    addToast({
+      type: 'info',
+      title: 'User Updated',
+      message: 'Account quotas and settings successfully updated.',
+    });
+  };
+
+  const deleteServerUser = (id: string) => {
+    const target = serverUsers.find((u) => u.id === id);
+    if (!target) return;
+    setServerUsers((prev) => prev.filter((u) => u.id !== id));
+    addAuditLog({
+      action: `Deleted Server User: ${target.username}`,
+      category: 'User Management',
+      severity: 'warning',
+      details: `Removed user account ${target.username} and purged quotas.`,
+    });
+    addToast({
+      type: 'warning',
+      title: 'User Deleted',
+      message: `User account '${target.username}' has been removed.`,
+    });
+  };
+
+  const toggleUserStatus = (id: string) => {
+    setServerUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === id) {
+          const nextStatus = u.status === 'active' ? 'suspended' : 'active';
+          addToast({
+            type: nextStatus === 'active' ? 'success' : 'warning',
+            title: `User ${nextStatus === 'active' ? 'Activated' : 'Suspended'}`,
+            message: `Account '${u.username}' is now ${nextStatus}.`,
+          });
+          return { ...u, status: nextStatus };
+        }
+        return u;
+      })
+    );
+  };
+
+  const loginAsUser = (username: string) => {
+    const target = serverUsers.find((u) => u.username === username);
+    if (target) {
+      setActiveUserAccount(target);
+      setSelectedDomain(target.domain);
+      setPanelMode('user');
+      setActiveSection('user-panel');
+      addToast({
+        type: 'info',
+        title: `Switched to User Panel: ${target.username}`,
+        message: `Now managing account for domain ${target.domain}.`,
+      });
+    }
+  };
+
+  const returnToAdmin = () => {
+    setActiveUserAccount(null);
+    setPanelMode('admin');
+    setActiveSection('overview');
+    addToast({
+      type: 'info',
+      title: 'Returned to Administrator Console',
+      message: 'Logged back in as Super Administrator.',
+    });
   };
 
   // Toast Helpers
@@ -1047,10 +1252,49 @@ class PHPMailer {
     addToast({ type: 'success', title: `Error Page ${code} Updated` });
   };
 
-  // File Manager Actions
-  const createFile = (folderPath: string, name: string, content = '') => {
+  // File Manager Actions with Duplicate Detection & Replace Support
+  const createFile = (folderPath: string, name: string, content = '', overwrite = true) => {
     const fullPath = folderPath.endsWith('/') ? `${folderPath}${name}` : `${folderPath}/${name}`;
-    const ext = name.split('.').pop() || 'txt';
+    const ext = name.includes('.') ? name.split('.').pop() || 'txt' : 'txt';
+    const mime = ext === 'php' ? 'text/x-php' : ext === 'css' ? 'text/css' : ext === 'js' ? 'application/javascript' : ext === 'html' ? 'text/html' : ext === 'json' ? 'application/json' : ext === 'sql' ? 'application/sql' : 'text/plain';
+
+    // Check if duplicate file exists in this directory
+    const existingIndex = files.findIndex((f) => f.path === fullPath);
+
+    if (existingIndex !== -1 && overwrite) {
+      // Overwrite/Update existing duplicate file with the new content
+      setFiles((prev) =>
+        prev.map((f, idx) =>
+          idx === existingIndex
+            ? {
+                ...f,
+                name,
+                content,
+                size: content ? content.length : 120,
+                updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                extension: ext,
+                mimeType: mime,
+              }
+            : f
+        )
+      );
+
+      addAuditLog({
+        action: `Replaced Duplicate File ${name}`,
+        category: 'File',
+        severity: 'info',
+        details: `Updated and overwritten existing duplicate file at ${fullPath}`,
+      });
+
+      addToast({
+        type: 'success',
+        title: 'File Updated & Replaced',
+        message: `${name} in ${folderPath} was updated with the new version (duplicate replaced).`,
+      });
+      return;
+    }
+
+    // Otherwise create brand new file entry
     const newFile: VirtualFile = {
       id: `f-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name,
@@ -1060,17 +1304,98 @@ class PHPMailer {
       permissions: '0644',
       updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       extension: ext,
-      mimeType: ext === 'php' ? 'text/x-php' : ext === 'css' ? 'text/css' : 'text/plain',
+      mimeType: mime,
       content,
     };
     setFiles((prev) => [...prev, newFile]);
+
     addAuditLog({
       action: `Created File ${name}`,
       category: 'File',
       severity: 'info',
       details: `Saved at path ${fullPath}`,
     });
-    addToast({ type: 'success', title: 'File Created', message: name });
+
+    addToast({ type: 'success', title: 'File Uploaded', message: name });
+  };
+
+  const uploadMultipleFiles = (
+    folderPath: string,
+    filesList: Array<{ name: string; content: string; size?: number; mimeType?: string }>,
+    overwriteExisting = true
+  ) => {
+    let replacedCount = 0;
+    let createdCount = 0;
+
+    setFiles((prev) => {
+      let updated = [...prev];
+
+      filesList.forEach((item) => {
+        const fullPath = folderPath.endsWith('/') ? `${folderPath}${item.name}` : `${folderPath}/${item.name}`;
+        const ext = item.name.includes('.') ? item.name.split('.').pop() || 'txt' : 'txt';
+        const defaultMime = ext === 'php' ? 'text/x-php' : ext === 'css' ? 'text/css' : ext === 'js' ? 'application/javascript' : ext === 'html' ? 'text/html' : ext === 'json' ? 'application/json' : ext === 'sql' ? 'application/sql' : 'text/plain';
+        const finalMime = item.mimeType || defaultMime;
+
+        const existingIdx = updated.findIndex((f) => f.path === fullPath);
+
+        if (existingIdx !== -1 && overwriteExisting) {
+          replacedCount++;
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            name: item.name,
+            content: item.content,
+            size: item.size ?? (item.content ? item.content.length : 120),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            extension: ext,
+            mimeType: finalMime,
+          };
+        } else {
+          createdCount++;
+          const newFile: VirtualFile = {
+            id: `f-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            name: item.name,
+            path: fullPath,
+            type: 'file',
+            size: item.size ?? (item.content ? item.content.length : 120),
+            permissions: '0644',
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            extension: ext,
+            mimeType: finalMime,
+            content: item.content,
+          };
+          updated.push(newFile);
+        }
+      });
+
+      return updated;
+    });
+
+    addAuditLog({
+      action: `Batch Upload to ${folderPath}`,
+      category: 'File',
+      severity: 'info',
+      details: `Processed ${filesList.length} files (${replacedCount} replaced/updated duplicates, ${createdCount} created new). Overwrite duplicates: ${overwriteExisting ? 'Enabled' : 'Disabled'}`,
+    });
+
+    if (replacedCount > 0 && createdCount > 0) {
+      addToast({
+        type: 'success',
+        title: 'Files Uploaded & Replaced',
+        message: `${createdCount} new files added, ${replacedCount} duplicate files replaced and updated.`,
+      });
+    } else if (replacedCount > 0) {
+      addToast({
+        type: 'success',
+        title: 'Duplicate Files Replaced',
+        message: `${replacedCount} duplicate file(s) updated and replaced with new files in ${folderPath}.`,
+      });
+    } else {
+      addToast({
+        type: 'success',
+        title: 'Upload Successful',
+        message: `${createdCount} file(s) successfully uploaded to ${folderPath}.`,
+      });
+    }
   };
 
   const createFolder = (parentPath: string, name: string) => {
@@ -1792,6 +2117,9 @@ class PHPMailer {
 
         activeSection,
         setActiveSection,
+        panelMode,
+        setPanelMode,
+        activeUserAccount,
         selectedDomain,
         setSelectedDomain,
         commandPaletteOpen,
@@ -1801,12 +2129,20 @@ class PHPMailer {
         sidebarCollapsed,
         setSidebarCollapsed,
 
+        serverUsers,
+        createServerUser,
+        updateServerUser,
+        deleteServerUser,
+        toggleUserStatus,
+        loginAsUser,
+        returnToAdmin,
+
+        networkTelemetry,
+        detectServerIpAndMetrics,
+
         phpMyAdminModalOpen,
         setPhpMyAdminModalOpen,
         launchPhpMyAdmin,
-        phpMailerModalOpen,
-        setPhpMailerModalOpen,
-        launchPhpMailerTest,
         vpsInstallerModalOpen,
         setVpsInstallerModalOpen,
         launchVpsInstaller,
@@ -1855,6 +2191,7 @@ class PHPMailer {
         activeFilePath,
         setActiveFilePath,
         createFile,
+        uploadMultipleFiles,
         createFolder,
         updateFileContent,
         deleteFile,

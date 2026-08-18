@@ -156,6 +156,47 @@ export const DnsEditorSection: React.FC = () => {
         </div>
       </div>
 
+      {/* Child Nameservers & BIND9 DNS Server Status Banner */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/20 shadow-xl space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold shrink-0">
+              <Globe className="w-4 h-4 text-indigo-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <span>Child Nameservers (Glue Records) & BIND9 DNS Engine</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] text-emerald-400 font-mono">Port 53 Active (TCP/UDP)</span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Registrar Glue Records point to this VPS. BIND9 authoritatively resolves DNS for <span className="font-mono text-sky-300 font-bold">ns1.sitindia.in</span> & <span className="font-mono text-sky-300 font-bold">ns2.sitindia.in</span>.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-mono font-semibold">
+              Host IP: 103.174.102.45
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-indigo-500/10 text-[11px]">
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
+            <div className="text-slate-400 font-medium">Child Nameserver 1</div>
+            <div className="font-mono text-sky-400 font-bold">ns1.sitindia.in ➜ 103.174.102.45</div>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
+            <div className="text-slate-400 font-medium">Child Nameserver 2</div>
+            <div className="font-mono text-sky-400 font-bold">ns2.sitindia.in ➜ 103.174.102.45</div>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-0.5">
+            <div className="text-slate-400 font-medium">Roundcube Webmail Record</div>
+            <div className="font-mono text-purple-400 font-bold">webmail.sitindia.in ➜ 103.174.102.45</div>
+          </div>
+        </div>
+      </div>
+
       {/* DNS Records Table */}
       <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">

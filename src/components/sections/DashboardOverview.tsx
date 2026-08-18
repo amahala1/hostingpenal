@@ -28,6 +28,9 @@ import {
   Sparkles,
   Play,
   TrendingUp,
+  LayoutGrid,
+  Users,
+  Network,
 } from 'lucide-react';
 
 export const DashboardOverview: React.FC = () => {
@@ -41,7 +44,6 @@ export const DashboardOverview: React.FC = () => {
     systemVersion,
     isVpsInstalled,
     launchPhpMyAdmin,
-    launchPhpMailerTest,
     launchVpsInstaller,
     setActiveSection,
     setSelectedDomain,
@@ -49,12 +51,37 @@ export const DashboardOverview: React.FC = () => {
     addToast,
     triggerHaptic,
     userProfile,
+    networkTelemetry,
+    detectServerIpAndMetrics,
+    serverUsers,
+    setPanelMode,
   } = useApp();
 
   const totalDiskUsed = domains.reduce((acc, d) => acc + d.diskUsedMB, 0) + 4200;
   const totalBwUsed = domains.reduce((acc, d) => acc + d.bandwidthUsedMB, 0);
 
   const quickShortcuts = [
+    {
+      title: 'User Panel (cPanel Grid)',
+      subtitle: 'Photo-matched iconic user account view',
+      icon: <LayoutGrid className="w-5 h-5 text-sky-600" />,
+      action: () => {
+        setPanelMode('user');
+        setActiveSection('user-panel');
+      },
+      badge: 'Interactive',
+      badgeStyle: 'ha-badge-blue',
+      borderHover: 'hover:border-sky-400',
+    },
+    {
+      title: 'User Accounts & Reseller',
+      subtitle: `${serverUsers.length} active server accounts`,
+      icon: <Users className="w-5 h-5 text-indigo-600" />,
+      action: () => setActiveSection('users-manager'),
+      badge: 'Manager',
+      badgeStyle: 'ha-badge-purple',
+      borderHover: 'hover:border-indigo-400',
+    },
     {
       title: '1-Click VPS Auto-Installer',
       subtitle: isVpsInstalled ? 'All Services 100% Active' : 'Automated Setup Required',
@@ -101,36 +128,50 @@ export const DashboardOverview: React.FC = () => {
       borderHover: 'hover:border-amber-400',
     },
     {
-      title: 'PHPMailer SMTP Suite',
-      subtitle: 'Real-Time Handshake Diagnostics',
-      icon: <Send className="w-5 h-5 text-purple-600" />,
-      action: () => launchPhpMailerTest(),
-      badge: 'SMTP TLS',
+      title: 'DNS Zone Records',
+      subtitle: 'A, CNAME, MX, SPF, DKIM',
+      icon: <Globe className="w-5 h-5 text-indigo-600" />,
+      action: () => setActiveSection('dns'),
+      badge: 'DNSSEC Ready',
       badgeStyle: 'ha-badge-purple',
-      borderHover: 'hover:border-purple-400',
-    },
-    {
-      title: 'PHP & FPM Config',
-      subtitle: 'PHP 8.2 & 8.3 Runtime Manager',
-      icon: <FileCode className="w-5 h-5 text-purple-600" />,
-      action: () => setActiveSection('php-manager'),
-      badge: 'OPcache Active',
-      badgeStyle: 'ha-badge-purple',
-      borderHover: 'hover:border-purple-400',
-    },
-    {
-      title: 'AutoSSL & TLS WAF',
-      subtitle: "Let's Encrypt Wildcard SAN",
-      icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
-      action: () => setActiveSection('ssl-security'),
-      badge: '100% Secured',
-      badgeStyle: 'ha-badge-emerald',
-      borderHover: 'hover:border-emerald-400',
+      borderHover: 'hover:border-indigo-400',
     },
   ];
 
   return (
     <div id="ha-section-overview" className="space-y-7 pb-12">
+      {/* Live VPS Hardware & Telemetry Bar */}
+      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
+            <Network className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-900 font-mono">
+                Authoritative VPS IP: {networkTelemetry.publicIp}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                Auto-Detected Live
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-mono">
+              Hostname: {networkTelemetry.hostname} • ISP: {networkTelemetry.isp}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => detectServerIpAndMetrics()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-300 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Sync Live Hardware & IP</span>
+          </button>
+        </div>
+      </div>
+
       {/* Hero Welcome Banner */}
       <div className="p-6 sm:p-8 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 rounded-3xl text-white shadow-xl shadow-purple-500/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute -right-8 -top-8 w-56 h-56 rounded-full bg-white/10 blur-2xl pointer-events-none" />
@@ -144,17 +185,20 @@ export const DashboardOverview: React.FC = () => {
             Indian Web Hosting Control Panel
           </h1>
           <p className="text-xs sm:text-sm text-white/95 font-medium leading-relaxed">
-            Manage your domains, databases with isolated phpMyAdmin, Roundcube Webmail, code editor with live line ruler, and 1-click automated VPS provisioning with zero manual SSH commands.
+            Manage domains, multi-user accounts, MariaDB databases, Roundcube Webmail, code editor with line ruler, and photo-matched cPanel User Panel layout.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={launchVpsInstaller}
-            className="px-4 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-white/90 text-xs font-extrabold shadow-lg transition flex items-center gap-2"
+            onClick={() => {
+              setPanelMode('user');
+              setActiveSection('user-panel');
+            }}
+            className="px-4 py-2.5 rounded-xl bg-white text-sky-950 hover:bg-white/90 text-xs font-extrabold shadow-lg transition flex items-center gap-2"
           >
-            <Server className="w-4 h-4 text-purple-700" />
-            <span>1-Click VPS Installer</span>
+            <LayoutGrid className="w-4 h-4 text-sky-600" />
+            <span>Open User Panel</span>
           </button>
 
           <button

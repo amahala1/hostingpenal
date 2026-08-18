@@ -5,7 +5,6 @@ import { Header } from './components/Header';
 import { LoginPage } from './components/LoginPage';
 import { CommandPalette } from './components/CommandPalette';
 import { AccessibilityAnnouncer, ToastContainer } from './components/AccessibilityAnnouncer';
-import { PhpMailerModal } from './components/sections/PhpMailerModal';
 import { VpsInstallerModal } from './components/modals/VpsInstallerModal';
 import { RoundcubeWebmailSection } from './components/sections/RoundcubeWebmailSection';
 
@@ -24,13 +23,13 @@ import { PluginsSection } from './components/sections/PluginsSection';
 import { AuditLogsSection } from './components/sections/AuditLogsSection';
 import { ApiDocsSection } from './components/sections/ApiDocsSection';
 import { ProfileSettingsSection } from './components/sections/ProfileSettingsSection';
+import { UserPanelSection } from './components/sections/UserPanelSection';
+import { UserManagementSection } from './components/sections/UserManagementSection';
 
 const MainContent: React.FC = () => {
   const {
     isAuthenticated,
     activeSection,
-    phpMailerModalOpen,
-    setPhpMailerModalOpen,
     vpsInstallerModalOpen,
     setVpsInstallerModalOpen,
     fontSize,
@@ -47,6 +46,10 @@ const MainContent: React.FC = () => {
     switch (activeSection) {
       case 'overview':
         return <DashboardOverview />;
+      case 'user-panel':
+        return <UserPanelSection />;
+      case 'users-manager':
+        return <UserManagementSection />;
       case 'websites':
         return <WebsitesSection />;
       case 'file-manager':
@@ -59,7 +62,6 @@ const MainContent: React.FC = () => {
       case 'ssl-security':
         return <SslSecuritySection />;
       case 'email':
-      case 'phpmailer-client':
         return <EmailHostingSection />;
       case 'roundcube':
         return <RoundcubeWebmailSection />;
@@ -116,11 +118,7 @@ const MainContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals: PHPMailer, VPS Auto-Installer */}
-      <PhpMailerModal
-        isOpen={phpMailerModalOpen}
-        onClose={() => setPhpMailerModalOpen(false)}
-      />
+      {/* Global Modals: VPS Auto-Installer */}
       <VpsInstallerModal
         isOpen={vpsInstallerModalOpen}
         onClose={() => setVpsInstallerModalOpen(false)}

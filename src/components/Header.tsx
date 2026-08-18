@@ -21,6 +21,9 @@ import {
   RefreshCw,
   LogOut,
   Menu,
+  LayoutGrid,
+  Shield,
+  Network,
 } from 'lucide-react';
 import { ThemeMode, FontSize } from '../types';
 
@@ -44,11 +47,25 @@ export const Header: React.FC<{ onToggleMobileSidebar?: () => void }> = ({ onTog
     addToast,
     triggerHaptic,
     services,
+    networkTelemetry,
+    detectServerIpAndMetrics,
+    panelMode,
+    setPanelMode,
+    activeUserAccount,
+    returnToAdmin,
   } = useApp();
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [quickDomainDropdownOpen, setQuickDomainDropdownOpen] = useState(false);
+  const [syncingIp, setSyncingIp] = useState(false);
+
+  const handleSyncIp = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSyncingIp(true);
+    await detectServerIpAndMetrics();
+    setSyncingIp(false);
+  };
 
   const toggleTheme = () => {
     triggerHaptic();
@@ -132,6 +149,18 @@ export const Header: React.FC<{ onToggleMobileSidebar?: () => void }> = ({ onTog
             </div>
           )}
         </div>
+
+        {/* Live VPS IP Pill */}
+        <button
+          onClick={handleSyncIp}
+          className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-xs font-mono transition-colors text-slate-300"
+          title="VPS Server Public IP (Click to re-verify live IP & hardware metrics)"
+        >
+          <Network className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <span className="text-slate-400">IP:</span>
+          <span className="font-bold text-slate-200">{networkTelemetry.publicIp}</span>
+          <RefreshCw className={`w-3 h-3 text-slate-400 ${syncingIp ? 'animate-spin text-sky-400' : ''}`} />
+        </button>
       </div>
 
       {/* Center: Global Search trigger */}
@@ -151,12 +180,41 @@ export const Header: React.FC<{ onToggleMobileSidebar?: () => void }> = ({ onTog
         </button>
       </div>
 
-      {/* Right: Telemetry pill & Accessibility / Profile tools */}
+      {/* Right: Panel Switcher & Accessibility / Profile tools */}
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* User Panel / Admin Mode Switcher Button */}
+        {panelMode === 'admin' ? (
+          <button
+            onClick={() => {
+              setPanelMode('user');
+              setActiveSection('user-panel');
+              addToast({
+                type: 'info',
+                title: 'User Panel View',
+                message: 'Viewing account features in classic cPanel iconic layout.',
+              });
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold shadow-sm transition-all"
+            title="Switch to User Panel Grid (Photo-matched iconic view)"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">User Panel</span>
+          </button>
+        ) : (
+          <button
+            onClick={returnToAdmin}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition-all"
+            title="Return to Super Admin Console"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Admin Console</span>
+          </button>
+        )}
+
         {/* Real-time Telemetry Pill */}
         <div
           onClick={() => setActiveSection('metrics')}
-          className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-xs cursor-pointer hover:border-slate-700 transition-colors"
+          className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-xs cursor-pointer hover:border-slate-700 transition-colors"
           title="Server Health & Resource Load"
         >
           <div className="flex items-center gap-1.5">

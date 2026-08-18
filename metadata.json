@@ -1,6 +1,6 @@
 {
   "name": "HostAdmin Control Panel",
-  "description": "Enterprise multi-cloud server and website control panel with 1-click phpMyAdmin, PHPMailer SMTP diagnostic suite, auto-dependency resolution, system version update manager, multi-color light design system, and multi-domain email hosting.",
+  "description": "Enterprise cloud hosting control panel with photo-matched cPanel User Panel grid, sub-user account creation, live VPS IP auto-detection, real-time RAM/storage telemetry, isolated phpMyAdmin, Roundcube Webmail, and multi-domain virtual hosts.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

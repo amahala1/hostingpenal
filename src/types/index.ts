@@ -3,6 +3,8 @@ export type FontSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export type NavSection =
   | 'overview'
+  | 'user-panel'
+  | 'users-manager'
   | 'websites'
   | 'file-manager'
   | 'php-manager'
@@ -11,7 +13,6 @@ export type NavSection =
   | 'ssl-security'
   | 'email'
   | 'roundcube'
-  | 'phpmailer-client'
   | 'vps-installer'
   | 'dns'
   | 'dns-editor'
@@ -25,6 +26,46 @@ export type NavSection =
   | 'profile'
   | 'profile-settings'
   | 'settings';
+
+export interface ServerAccountUser {
+  id: string;
+  username: string;
+  domain: string;
+  email: string;
+  packageName: string;
+  diskQuotaMB: number;
+  diskUsedMB: number;
+  bandwidthQuotaMB: number;
+  bandwidthUsedMB: number;
+  dbLimit: number;
+  dbCount: number;
+  emailLimit: number;
+  emailCount: number;
+  ftpLimit: number;
+  ftpCount: number;
+  sshAccess: boolean;
+  phpVersion: string;
+  sslEnabled: boolean;
+  status: 'active' | 'suspended';
+  createdAt: string;
+}
+
+export interface VpsNetworkTelemetry {
+  publicIp: string;
+  ipv6: string;
+  hostname: string;
+  gateway: string;
+  isp: string;
+  location: string;
+  autoDetected: boolean;
+  lastChecked: string;
+  totalRamMB: number;
+  usedRamMB: number;
+  totalDiskGB: number;
+  usedDiskGB: number;
+  cpuLoadPercent: number;
+  activeProcesses: number;
+}
 
 export interface WebsiteDomain {
   id: string;
