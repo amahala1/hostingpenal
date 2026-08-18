@@ -467,36 +467,127 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Toasts
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
-  // State collections
-  const [domains, setDomains] = useState<WebsiteDomain[]>(INITIAL_DOMAINS || []);
-  const [redirects, setRedirects] = useState<DomainRedirect[]>(INITIAL_REDIRECTS || []);
+  // State collections with localStorage persistence and Clean Dashboard default
+  const [domains, setDomains] = useState<WebsiteDomain[]>(() => {
+    const saved = localStorage.getItem('hostadmin_domains');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  const [redirects, setRedirects] = useState<DomainRedirect[]>(() => {
+    const saved = localStorage.getItem('hostadmin_redirects');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
   const [errorPages, setErrorPages] = useState<ErrorPageConfig[]>(INITIAL_ERROR_PAGES || []);
-  const [files, setFiles] = useState<VirtualFile[]>(INITIAL_FILES || []);
+
+  const [files, setFiles] = useState<VirtualFile[]>(() => {
+    const saved = localStorage.getItem('hostadmin_files');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return INITIAL_FILES || [];
+  });
+
   const [activeFilePath, setActiveFilePath] = useState<string>('/home/sitindia/public_html');
-  const [ftpAccounts, setFtpAccounts] = useState<FtpAccount[]>(INITIAL_FTP_ACCOUNTS || []);
+
+  const [ftpAccounts, setFtpAccounts] = useState<FtpAccount[]>(() => {
+    const saved = localStorage.getItem('hostadmin_ftp_accounts');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
   const [phpConfigs, setPhpConfigs] = useState<PhpConfig[]>(INITIAL_PHP_VERSIONS || []);
-  const [databases, setDatabases] = useState<DatabaseRecord[]>(INITIAL_DATABASES || []);
-  const [dbUsers, setDbUsers] = useState<DatabaseUser[]>(INITIAL_DB_USERS || []);
-  const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>(INITIAL_EMAIL_ACCOUNTS || []);
-  const [emailForwarders, setEmailForwarders] = useState<EmailForwarder[]>([
-    { id: 'fwd-1', sourceEmail: 'info@sitindia.in', targetEmail: 'admin@sitindia.in', active: true },
-    { id: 'fwd-2', sourceEmail: 'contact@sitindia.in', targetEmail: 'support@sitindia.in', active: true },
-  ]);
-  const [autoresponders, setAutoresponders] = useState<EmailAutoresponder[]>([
-    {
-      id: 'ar-1',
-      email: 'support@sitindia.in',
-      subject: 'Support Ticket Received - SIT India',
-      body: 'Thank you for reaching out to SIT India Support. A representative will respond within 2 business hours.',
-      active: true,
-      startDate: '2026-01-01',
-      endDate: '2026-12-31',
-    },
-  ]);
-  const [webmailMessages, setWebmailMessages] = useState<WebmailMessage[]>(INITIAL_WEBMAIL_MESSAGES || []);
-  const [dnsRecords, setDnsRecords] = useState<DnsRecord[]>(INITIAL_DNS_RECORDS || []);
+
+  const [databases, setDatabases] = useState<DatabaseRecord[]>(() => {
+    const saved = localStorage.getItem('hostadmin_databases');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  const [dbUsers, setDbUsers] = useState<DatabaseUser[]>(() => {
+    const saved = localStorage.getItem('hostadmin_db_users');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>(() => {
+    const saved = localStorage.getItem('hostadmin_email_accounts');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  const [emailForwarders, setEmailForwarders] = useState<EmailForwarder[]>([]);
+  const [autoresponders, setAutoresponders] = useState<EmailAutoresponder[]>([]);
+  const [webmailMessages, setWebmailMessages] = useState<WebmailMessage[]>([]);
+
+  const [dnsRecords, setDnsRecords] = useState<DnsRecord[]>(() => {
+    const saved = localStorage.getItem('hostadmin_dns_records');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
   const [dnssecEnabled, setDnssecEnabled] = useState(true);
-  const [sslCertificates, setSslCertificates] = useState<SslCertificate[]>(INITIAL_SSL_CERTS || []);
+
+  const [sslCertificates, setSslCertificates] = useState<SslCertificate[]>(() => {
+    const saved = localStorage.getItem('hostadmin_ssl_certs');
+    if (saved !== null) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  // Synchronize state changes to localStorage so deleted items never return
+  useEffect(() => {
+    localStorage.setItem('hostadmin_domains', JSON.stringify(domains));
+  }, [domains]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_databases', JSON.stringify(databases));
+  }, [databases]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_db_users', JSON.stringify(dbUsers));
+  }, [dbUsers]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_email_accounts', JSON.stringify(emailAccounts));
+  }, [emailAccounts]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_files', JSON.stringify(files));
+  }, [files]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_ftp_accounts', JSON.stringify(ftpAccounts));
+  }, [ftpAccounts]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_dns_records', JSON.stringify(dnsRecords));
+  }, [dnsRecords]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_redirects', JSON.stringify(redirects));
+  }, [redirects]);
+
+  useEffect(() => {
+    localStorage.setItem('hostadmin_ssl_certs', JSON.stringify(sslCertificates));
+  }, [sslCertificates]);
   const [ipBlockRules, setIpBlockRules] = useState<IpBlockRule[]>(INITIAL_IP_BLOCKS || []);
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
     modSecurity: true,
@@ -925,10 +1016,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem('hostadmin_auth', 'false');
     setIsAuthenticated(false);
 
-    setDomains(INITIAL_DOMAINS || []);
-    setDatabases(INITIAL_DATABASES || []);
-    setFiles(INITIAL_FILES || []);
-    setServerUsers(INITIAL_SERVER_USERS || []);
+    setDomains([]);
+    setDatabases([]);
+    setFiles([]);
+    setServerUsers([]);
 
     addToast({
       type: 'info',
