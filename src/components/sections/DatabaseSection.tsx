@@ -86,6 +86,7 @@ export const DatabaseSection: React.FC = () => {
     isPhpMyAdminInstalled,
     isVpsInstalled,
     installPhpMyAdmin,
+    uninstallPhpMyAdmin,
     addToast,
     triggerHaptic,
   } = useApp();
@@ -320,17 +321,27 @@ export const DatabaseSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isPhpMyAdminInstalled || isVpsInstalled ? (
-            <button
-              onClick={() => launchPhpMyAdmin(databases[0]?.name)}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-              title="Auto-Verify & Launch Directory phpMyAdmin"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Launch Verified phpMyAdmin (/phpmyadmin)</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-            </button>
+            <>
+              <button
+                onClick={() => launchPhpMyAdmin(databases[0]?.name)}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                title="Auto-Verify & Launch Directory phpMyAdmin"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Launch Working phpMyAdmin (/phpmyadmin)</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </button>
+              <button
+                onClick={() => uninstallPhpMyAdmin()}
+                className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1 transition-all shadow-sm"
+                title="Uninstall phpMyAdmin suite from VPS"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span>Uninstall phpMyAdmin</span>
+              </button>
+            </>
           ) : (
             <button
               onClick={() => installPhpMyAdmin()}
@@ -338,7 +349,7 @@ export const DatabaseSection: React.FC = () => {
               title="Install phpMyAdmin Directory Suite on VPS"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Install phpMyAdmin (v5.2.1)</span>
+              <span>Install phpMyAdmin (v5.2.2)</span>
             </button>
           )}
         </div>

@@ -17,7 +17,7 @@ import {
 import { SystemPlugin } from '../../types';
 
 export const PluginsSection: React.FC = () => {
-  const { plugins, togglePlugin, addToast, triggerHaptic, triggerLivePackageInstall, networkTelemetry, launchPhpMyAdmin, setActiveSection } = useApp();
+  const { plugins, togglePlugin, addToast, triggerHaptic, triggerLivePackageInstall, networkTelemetry, launchPhpMyAdmin, uninstallPhpMyAdmin, setActiveSection } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -36,6 +36,9 @@ export const PluginsSection: React.FC = () => {
   const handleInstallClick = (plugin: SystemPlugin) => {
     triggerHaptic();
     if (plugin.enabled) {
+      if (plugin.name.toLowerCase().includes('phpmyadmin')) {
+        uninstallPhpMyAdmin();
+      }
       togglePlugin(plugin.id);
     } else {
       triggerLivePackageInstall(plugin.id, plugin.name);

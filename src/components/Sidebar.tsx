@@ -40,256 +40,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
     }[];
   }[] = [];
 
-  if (userProfile.role === 'Reseller') {
-    // Reseller Role Scope: Package Creation, Customer Provisioning, Pool Stats
-    navGroups = [
-      {
-        label: 'Reseller Control Panel',
-        items: [
-          {
-            id: 'reseller-portal',
-            title: 'Reseller Portal & Packages',
-            badge: 'Reseller Portal',
-            badgeColor: 'ha-badge-purple',
-          },
-          {
-            id: 'users-manager',
-            title: 'Customer Sub-Accounts',
-            badge: serverUsers.length,
-            badgeColor: 'ha-badge-blue',
-          },
-        ],
-      },
-    ];
-  } else if (userProfile.role === 'Site Admin') {
-    // User Panel Role Scope: End-User Hosting Panel
-    navGroups = [
-      {
-        label: 'User Control Panel',
-        items: [
-          {
-            id: 'user-panel',
-            title: 'User Dashboard (cPanel Grid)',
-            badge: 'Active',
-            badgeColor: 'ha-badge-blue',
-          },
-          {
-            id: 'websites',
-            title: 'Domain Management',
-            badge: domains?.length || 0,
-            badgeColor: 'ha-badge-mango',
-          },
-          {
-            id: 'file-manager',
-            title: 'File Manager & Editor',
-            badge: 'Ruler',
-            badgeColor: 'ha-badge-blue',
-          },
-          {
-            id: 'php-manager',
-            title: 'PHP Settings & FPM',
-            badge: 'v8.3',
-            badgeColor: 'ha-badge-purple',
-          },
-        ],
-      },
-      {
-        label: 'Databases & Webmail',
-        items: [
-          {
-            id: 'databases',
-            title: 'MySQL Databases',
-            badge: databases?.length || 0,
-            badgeColor: 'ha-badge-mango',
-          },
-          {
-            id: 'phpmyadmin',
-            title: '1-Click phpMyAdmin',
-            badge: userProfile.username,
-            badgeColor: 'ha-badge-purple',
-            onClickCustom: () => launchPhpMyAdmin(),
-          },
-          {
-            id: 'email',
-            title: 'Email Accounts',
-            badge: emailAccounts?.length || 0,
-            badgeColor: 'ha-badge-pink',
-          },
-          {
-            id: 'roundcube',
-            title: 'Roundcube Webmail',
-            badge: 'Live',
-            badgeColor: 'ha-badge-blue',
-          },
-        ],
-      },
-      {
-        label: 'Security & Tools',
-        items: [
-          {
-            id: 'ssl-security',
-            title: 'SSL Certificates (AutoSSL)',
-            badge: '100%',
-            badgeColor: 'ha-badge-emerald',
-          },
-          {
-            id: 'dns-editor',
-            title: 'DNS Zone Records & Propagation',
-          },
-          {
-            id: 'cron',
-            title: 'Cron Job Scheduler',
-          },
-          {
-            id: 'backups',
-            title: 'Automated Backups',
-          },
-        ],
-      },
-    ];
-  } else {
-    // Master Super Administrator Role Scope: Full VPS Server Administration
-    navGroups = [
-      {
-        label: 'My Website Hosting',
-        items: [
-          {
-            id: 'overview',
-            title: 'My Website Workspace',
-            badge: 'Live Site',
-            badgeColor: 'ha-badge-emerald',
-          },
-          {
-            id: 'file-manager',
-            title: 'File Manager & Code Editor',
-            badge: 'Files',
-            badgeColor: 'ha-badge-blue',
-          },
-          {
-            id: 'websites',
-            title: 'Domain & SSL Status',
-            badge: domains?.length || 0,
-            badgeColor: 'ha-badge-mango',
-          },
-        ],
-      },
-      {
-        label: 'Websites & Files',
-        items: [
-          {
-            id: 'websites',
-            title: 'Domain Management',
-            badge: domains?.length || 0,
-            badgeColor: 'ha-badge-mango',
-          },
-          {
-            id: 'file-manager',
-            title: 'File Manager & Editor',
-            badge: 'Ruler',
-            badgeColor: 'ha-badge-blue',
-          },
-          {
-            id: 'php-manager',
-            title: 'PHP Settings & FPM',
-            badge: 'v8.3',
-            badgeColor: 'ha-badge-purple',
-          },
-        ],
-      },
-      {
-        label: 'Databases & phpMyAdmin',
-        items: [
-          {
-            id: 'databases',
-            title: 'MySQL Databases',
-            badge: databases?.length || 0,
-            badgeColor: 'ha-badge-mango',
-          },
-          {
-            id: 'phpmyadmin',
-            title: '1-Click phpMyAdmin',
-            badge: userProfile.username,
-            badgeColor: 'ha-badge-purple',
-            onClickCustom: () => launchPhpMyAdmin(),
-          },
-        ],
-      },
-      {
-        label: 'Email & Communications',
-        items: [
-          {
-            id: 'email',
-            title: 'Email Accounts & Forwarders',
-            badge: emailAccounts?.length || 0,
-            badgeColor: 'ha-badge-pink',
-          },
-          {
-            id: 'roundcube',
-            title: 'Roundcube Webmail',
-            badge: 'Live',
-            badgeColor: 'ha-badge-blue',
-          },
-        ],
-      },
-      {
-        label: 'Security & Network',
-        items: [
-          {
-            id: 'ssl-security',
-            title: 'SSL Certificates (AutoSSL)',
-            badge: '100%',
-            badgeColor: 'ha-badge-emerald',
-          },
-          {
-            id: 'dns-editor',
-            title: 'DNS Zone Records & Propagation',
-          },
-        ],
-      },
-      {
-        label: 'System & Automation',
-        items: [
-          {
-            id: 'vps-installer',
-            title: '1-Click VPS Auto-Installer',
-            badge: isVpsInstalled ? 'Installed' : 'Setup Required',
-            badgeColor: isVpsInstalled ? 'ha-badge-emerald' : 'ha-badge-red',
-            onClickCustom: () => launchVpsInstaller(),
-          },
-          {
-            id: 'terminal',
-            title: 'Web SSH Terminal',
-            badge: 'Live',
-            badgeColor: 'ha-badge-purple',
-          },
-          {
-            id: 'metrics',
-            title: 'Server Telemetry & Status',
-          },
-          {
-            id: 'cron',
-            title: 'Cron Job Scheduler',
-          },
-          {
-            id: 'backups',
-            title: 'Automated Backups',
-          },
-          {
-            id: 'plugins',
-            title: '1-Click Plugins Store',
-            badge: `${plugins.filter((p) => p.installed).length}/${plugins.length}`,
-            badgeColor: 'ha-badge-pink',
-          },
-          {
-            id: 'settings',
-            title: 'System Version & Updates',
-            badge: systemVersion.hasUpdate ? 'Update' : `v${systemVersion.currentVersion}`,
-            badgeColor: systemVersion.hasUpdate ? 'ha-badge-red' : 'ha-badge-emerald',
-          },
-        ],
-      },
-    ];
-  }
+  // Unified Clean Navigation: Remove duplicates and focus on requested core tools
+  navGroups = [
+    {
+      label: 'Core Server Tools',
+      items: [
+        {
+          id: 'websites',
+          title: 'Add New Domain',
+          badge: domains?.length || 0,
+          badgeColor: 'ha-badge-mango',
+        },
+        {
+          id: 'file-manager',
+          title: 'File Manager',
+          badge: 'Files',
+          badgeColor: 'ha-badge-blue',
+        },
+        {
+          id: 'dns-editor',
+          title: 'DNS Zone Editor',
+          badge: 'Zone',
+          badgeColor: 'ha-badge-emerald',
+        },
+        {
+          id: 'phpmyadmin',
+          title: 'phpMyAdmin',
+          badge: 'Official',
+          badgeColor: 'ha-badge-purple',
+          onClickCustom: () => launchPhpMyAdmin(),
+        },
+        {
+          id: 'roundcube',
+          title: 'Roundcube Webmail',
+          badge: 'v1.7.3',
+          badgeColor: 'ha-badge-blue',
+        },
+      ],
+    },
+  ];
 
   const handleNavClick = (id: NavSection, title: string, customClick?: () => void) => {
     triggerHaptic();

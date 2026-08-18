@@ -18,6 +18,7 @@ import {
   FileCode,
   Sparkles,
   ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -25,7 +26,7 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   isOpen,
   onClose,
 }) => {
-  const { databases, dbUsers, executeSqlQuery, addToast, userProfile, networkTelemetry } = useApp();
+  const { databases, dbUsers, executeSqlQuery, addToast, userProfile, networkTelemetry, uninstallPhpMyAdmin } = useApp();
 
   // Strict user database isolation (Requirement 3: Only databases belonging to the active logged-in user are shown)
   const allowedDatabases = databases.filter((db) => {
@@ -134,6 +135,19 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
               <span>Open Direct Link</span>
               <ExternalLink className="w-3.5 h-3.5 text-slate-900" />
             </a>
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to uninstall phpMyAdmin from VPS?')) {
+                  uninstallPhpMyAdmin();
+                  onClose();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/80 hover:bg-rose-600 text-white rounded-full text-xs font-bold transition shadow"
+              title="Uninstall phpMyAdmin suite from VPS"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-white" />
+              <span>Uninstall</span>
+            </button>
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-amber-200" />
               <span>FastCGI Socket Active ✓</span>

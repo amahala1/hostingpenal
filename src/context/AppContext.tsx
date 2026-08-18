@@ -133,6 +133,7 @@ interface AppContextType {
   launchPhpMyAdmin: (dbName?: string) => void;
   isPhpMyAdminInstalled: boolean;
   installPhpMyAdmin: () => Promise<void>;
+  uninstallPhpMyAdmin: () => Promise<void>;
   isRoundcubeInstalled: boolean;
   installRoundcube: () => Promise<void>;
   vpsInstallerModalOpen: boolean;
@@ -347,7 +348,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   // Navigation & Panel Mode Switcher
-  const [activeSection, setActiveSection] = useState<NavSection>('overview');
+  const [activeSection, setActiveSection] = useState<NavSection>('websites');
   const [panelMode, setPanelMode] = useState<'admin' | 'user'>('admin');
   const [activeUserAccount, setActiveUserAccount] = useState<ServerAccountUser | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('sitindia.in');
@@ -671,21 +672,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [metrics]);
 
   // Software Installation States
-  const [isPhpMyAdminInstalled, setIsPhpMyAdminInstalled] = useState<boolean>(false);
-  const [isRoundcubeInstalled, setIsRoundcubeInstalled] = useState<boolean>(false);
+  const [isPhpMyAdminInstalled, setIsPhpMyAdminInstalled] = useState<boolean>(() => {
+    return localStorage.getItem('hostadmin_pma_installed') === 'true';
+  });
+  const [isRoundcubeInstalled, setIsRoundcubeInstalled] = useState<boolean>(() => {
+    return localStorage.getItem('hostadmin_roundcube_installed') === 'true';
+  });
 
   const installPhpMyAdmin = async (): Promise<void> => {
     setIsPhpMyAdminInstalled(true);
-    triggerLivePackageInstall('phpMyAdmin v5.2.1', 'Installing phpMyAdmin Database Suite...');
+    localStorage.setItem('hostadmin_pma_installed', 'true');
+    triggerLivePackageInstall('phpMyAdmin v5.2.2', 'Installing phpMyAdmin Directory Suite (/usr/share/phpmyadmin)...');
     addToast({
       type: 'success',
       title: 'phpMyAdmin Installation Initiated',
-      message: 'Configuring phpMyAdmin database manager on port 8443.',
+      message: 'Installing phpMyAdmin directory suite with Nginx location /phpmyadmin/.',
+    });
+  };
+
+  const uninstallPhpMyAdmin = async (): Promise<void> => {
+    setIsPhpMyAdminInstalled(false);
+    localStorage.removeItem('hostadmin_pma_installed');
+    addAuditLog({
+      action: 'Uninstalled phpMyAdmin',
+      category: 'Database',
+      severity: 'warning',
+      details: 'Purged /usr/share/phpmyadmin directory and removed Nginx fastcgi location block.',
+    });
+    addToast({
+      type: 'warning',
+      title: 'phpMyAdmin Uninstalled',
+      message: 'phpMyAdmin directory suite and Nginx configuration endpoint have been uninstalled.',
     });
   };
 
   const installRoundcube = async (): Promise<void> => {
     setIsRoundcubeInstalled(true);
+    localStorage.setItem('hostadmin_roundcube_installed', 'true');
     triggerLivePackageInstall('Roundcube Webmail v1.6.6', 'Installing Roundcube Webmail Engine...');
     addToast({
       type: 'success',
@@ -2645,6 +2668,7 @@ class PHPMailer {
         launchPhpMyAdmin,
         isPhpMyAdminInstalled,
         installPhpMyAdmin,
+        uninstallPhpMyAdmin,
         isRoundcubeInstalled,
         installRoundcube,
         vpsInstallerModalOpen,

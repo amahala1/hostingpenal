@@ -90,7 +90,7 @@ const MainContent: React.FC = () => {
       case 'settings':
         return <ProfileSettingsSection />;
       default:
-        return <DashboardOverview />;
+        return <WebsitesSection />;
     }
   };
 
