@@ -1,0 +1,607 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   HostAdmin Pro Multi-Color Design System (Mango, Purple, Pink, Red, White)
+   ========================================================================== */
+
+:root {
+  /* Mango Palette */
+  --mango-primary: #f59e0b;
+  --mango-hover: #d97706;
+  --mango-light: #fef3c7;
+  --mango-soft: #fffbeb;
+  --mango-accent: #ff9900;
+  --mango-glow: rgba(245, 158, 11, 0.25);
+
+  /* Purple Palette */
+  --purple-primary: #8b5cf6;
+  --purple-hover: #7c3aed;
+  --purple-light: #f3e8ff;
+  --purple-soft: #faf5ff;
+  --purple-dark: #6d28d9;
+  --purple-glow: rgba(139, 92, 246, 0.25);
+
+  /* Pink Palette */
+  --pink-primary: #ec4899;
+  --pink-hover: #db2777;
+  --pink-light: #fce7f3;
+  --pink-soft: #fdf2f8;
+  --pink-glow: rgba(236, 72, 153, 0.25);
+
+  /* Red Palette */
+  --red-primary: #ef4444;
+  --red-hover: #dc2626;
+  --red-light: #fee2e2;
+  --red-soft: #fef2f2;
+  --red-glow: rgba(239, 68, 68, 0.25);
+
+  /* White & Pearlescent Light Palette */
+  --bg-page: #f8f9fd;
+  --bg-card: #ffffff;
+  --bg-subtle: #f4f6fc;
+  --border-subtle: #e5e7eb;
+  --border-card: #eef2f6;
+  --text-main: #1e1b4b;
+  --text-body: #475569;
+  --text-muted: #94a3b8;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(99, 102, 241, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 25px -4px rgba(139, 92, 246, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  --shadow-mango: 0 8px 20px -3px rgba(245, 158, 11, 0.25);
+  --shadow-purple: 0 8px 20px -3px rgba(139, 92, 246, 0.25);
+  --shadow-pink: 0 8px 20px -3px rgba(236, 72, 153, 0.25);
+}
+
+/* Global resets & typography */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Multi-color Brand Gradients */
+.ha-gradient-multi {
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%);
+}
+
+.ha-gradient-mango {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #ea580c 100%);
+}
+
+.ha-gradient-purple {
+  background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #6d28d9 100%);
+}
+
+.ha-gradient-pink {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #be185d 100%);
+}
+
+.ha-gradient-red {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 50%, #b91c1c 100%);
+}
+
+.ha-gradient-header {
+  background: linear-gradient(135deg, #ffffff 0%, #faf5ff 50%, #fffbeb 100%);
+}
+
+/* Component Cards */
+.ha-card {
+  background-color: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px -2px rgba(100, 116, 139, 0.07);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ha-card:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px -4px rgba(139, 92, 246, 0.1);
+}
+
+.ha-card-mango {
+  border-left: 4px solid #f59e0b;
+}
+
+.ha-card-purple {
+  border-left: 4px solid #8b5cf6;
+}
+
+.ha-card-pink {
+  border-left: 4px solid #ec4899;
+}
+
+.ha-card-red {
+  border-left: 4px solid #ef4444;
+}
+
+/* Multi-color Button System */
+.ha-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.ha-btn:active {
+  transform: scale(0.98);
+}
+
+.ha-btn-mango {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.ha-btn-mango:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+.ha-btn-purple {
+  background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.ha-btn-purple:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.ha-btn-pink {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.ha-btn-pink:hover {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.4);
+}
+
+.ha-btn-red {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.ha-btn-red:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.ha-btn-white {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.ha-btn-white:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.ha-btn-ghost {
+  background: transparent;
+  color: #64748b;
+}
+
+.ha-btn-ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Badges */
+.ha-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.ha-badge-mango {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.ha-badge-purple {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.ha-badge-pink {
+  background-color: #fce7f3;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+}
+
+.ha-badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.ha-badge-emerald {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.ha-badge-blue {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+/* Form Inputs */
+.ha-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.ha-input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.ha-input-mango:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.ha-input-pink:focus {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+}
+
+/* Interactive Tabs */
+.ha-tab {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  color: #64748b;
+  background: transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.ha-tab:hover {
+  color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.ha-tab-active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.ha-tab-active-mango {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.ha-tab-active-pink {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%) !important;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+}
+
+/* Tables */
+.ha-table-container {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #eef2f6;
+  background: #ffffff;
+}
+
+.ha-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ha-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ha-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.ha-table tr:hover td {
+  background-color: #faf5ff;
+}
+
+/* Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   Code Editor Ruler & Light Themes
+   ========================================================================== */
+.editor-ruler-gutter {
+  background-color: #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  user-select: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  color: #94a3b8;
+  padding: 0.75rem 0.5rem;
+  text-align: right;
+  min-width: 3.25rem;
+}
+
+.editor-ruler-active-line {
+  color: #8b5cf6;
+  font-weight: 700;
+  background-color: rgba(139, 92, 246, 0.12);
+}
+
+.editor-textarea-base {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+  white-space: pre;
+  tab-size: 4;
+}
+
+/* Editor Light Themes */
+.theme-editor-paper {
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+.theme-editor-solarized {
+  background-color: #fdf6e3;
+  color: #657b83;
+}
+.theme-editor-solarized .editor-ruler-gutter {
+  background-color: #eee8d5;
+  border-color: #dcd7ba;
+  color: #93a1a1;
+}
+
+.theme-editor-github {
+  background-color: #f6f8fa;
+  color: #24292f;
+}
+.theme-editor-github .editor-ruler-gutter {
+  background-color: #eaeef2;
+  border-color: #d0d7de;
+  color: #57606a;
+}
+
+.theme-editor-sublime {
+  background-color: #fcfcfc;
+  color: #2d3748;
+}
+.theme-editor-sublime .editor-ruler-gutter {
+  background-color: #f7fafc;
+  border-color: #edf2f7;
+  color: #a0aec0;
+}
+
+.theme-editor-vs {
+  background-color: #ffffff;
+  color: #000000;
+}
+.theme-editor-vs .editor-ruler-gutter {
+  background-color: #f3f3f3;
+  border-color: #e5e5e5;
+  color: #237893;
+}
+
+/* ==========================================================================
+   Roundcube Webmail Dedicated UI Styles (Pure Clean Light Theme)
+   ========================================================================== */
+.roundcube-app {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 680px;
+}
+
+.roundcube-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+.roundcube-toolbar {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.roundcube-folder-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.roundcube-folder-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.roundcube-folder-btn.active {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-weight: 700;
+}
+
+.roundcube-mail-row {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.roundcube-mail-row:hover {
+  background-color: #f8fafc;
+}
+
+.roundcube-mail-row.unread {
+  background-color: #f0fdf4;
+  font-weight: 600;
+}
+
+.roundcube-mail-row.selected {
+  background-color: #eff6ff;
+}
+
+/* ==========================================================================
+   1-Click VPS Auto-Installer & Terminal Light
+   ========================================================================== */
+.vps-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.vps-modal-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 54rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+}
+
+.vps-terminal-light {
+  background: #f8fafc;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  line-height: 1.4rem;
+  padding: 0.875rem 1rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.vps-terminal-light .log-info {
+  color: #2563eb;
+}
+
+.vps-terminal-light .log-success {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.vps-terminal-light .log-warn {
+  color: #d97706;
+}
+
+.vps-terminal-light .log-cmd {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
