@@ -8,6 +8,7 @@ import { AccessibilityAnnouncer, ToastContainer } from './components/Accessibili
 import { VpsInstallerModal } from './components/modals/VpsInstallerModal';
 import { LiveSshTerminalModal } from './components/modals/LiveSshTerminalModal';
 import { RoundcubeWebmailSection } from './components/sections/RoundcubeWebmailSection';
+import { PhpMyAdminSection } from './components/sections/PhpMyAdminModal';
 
 import { DashboardOverview } from './components/sections/DashboardOverview';
 import { WebsitesSection } from './components/sections/WebsitesSection';
@@ -62,8 +63,9 @@ const MainContent: React.FC = () => {
       case 'php-manager':
         return <PhpManagerSection />;
       case 'databases':
-      case 'phpmyadmin':
         return <DatabaseSection />;
+      case 'phpmyadmin':
+        return <PhpMyAdminSection />;
       case 'ssl-security':
         return <SslSecuritySection />;
       case 'email':

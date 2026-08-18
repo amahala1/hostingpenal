@@ -66,9 +66,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onCloseMob
         {
           id: 'phpmyadmin',
           title: 'phpMyAdmin',
-          badge: 'Official',
+          badge: 'v5.2.2',
           badgeColor: 'ha-badge-purple',
-          onClickCustom: () => launchPhpMyAdmin(),
         },
         {
           id: 'roundcube',

@@ -22,8 +22,8 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
-export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
-  isOpen,
+export const PhpMyAdminSection: React.FC<{ isModal?: boolean; onClose?: () => void }> = ({
+  isModal = false,
   onClose,
 }) => {
   const { databases, dbUsers, executeSqlQuery, addToast, userProfile, networkTelemetry, uninstallPhpMyAdmin } = useApp();
@@ -62,8 +62,6 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   const [isExecuting, setIsExecuting] = useState(false);
   const [exportFormat, setExportFormat] = useState('SQL');
 
-  if (!isOpen) return null;
-
   const currentDbObj = allowedDatabases.find((d) => d.name === selectedDb) || allowedDatabases[0] || databases[0];
 
   const handleRunSql = () => {
@@ -98,68 +96,70 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl border border-amber-200/80 flex flex-col overflow-hidden relative"
-      >
-        {/* Top phpMyAdmin Multi-Color Header Bar */}
-        <div className="px-5 py-3.5 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-black text-lg shadow-inner">
-              <Database className="w-5 h-5 text-amber-100" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight">phpMyAdmin</span>
-                <span className="px-2 py-0.5 rounded-full bg-white/25 text-[11px] font-bold text-white uppercase tracking-wider">
-                  v5.2.2 1-Click Pro
-                </span>
-              </div>
-              <p className="text-xs text-white/90 font-medium">
-                Server: <span className="font-bold underline">127.0.0.1 via TCP/IP</span> • MariaDB 10.11.8 • utf8mb4_unicode_ci
-              </p>
-            </div>
+    <div className={isModal ? "w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl border border-amber-200/80 flex flex-col overflow-hidden relative" : "w-full bg-white rounded-2xl shadow-xl border border-amber-200/80 flex flex-col overflow-hidden min-h-[750px]"}>
+      {/* Top phpMyAdmin Multi-Color Header Bar */}
+      <div className="px-5 py-3.5 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-black text-lg shadow-inner">
+            <Database className="w-5 h-5 text-amber-100" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <a
-              href={`https://${networkTelemetry.publicIp || '168.220.248.86'}/phpmyadmin/`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-full text-xs font-black transition shadow"
-              title="Open phpMyAdmin directory endpoint in new page"
-            >
-              <span>Open Direct Link</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-900" />
-            </a>
-            <button
-              onClick={() => {
-                if (window.confirm('Are you sure you want to uninstall phpMyAdmin from VPS?')) {
-                  uninstallPhpMyAdmin();
-                  onClose();
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/80 hover:bg-rose-600 text-white rounded-full text-xs font-bold transition shadow"
-              title="Uninstall phpMyAdmin suite from VPS"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-white" />
-              <span>Uninstall</span>
-            </button>
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
-              <span>FastCGI Socket Active ✓</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-lg tracking-tight">phpMyAdmin</span>
+              <span className="px-2 py-0.5 rounded-full bg-white/25 text-[11px] font-bold text-white uppercase tracking-wider">
+                v5.2.2 Official Suite
+              </span>
             </div>
+            <p className="text-xs text-white/90 font-medium">
+              Server: <span className="font-bold underline">127.0.0.1 via TCP/IP</span> • MariaDB 10.11.8 • utf8mb4_unicode_ci
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <a
+            href="https://www.phpmyadmin.net/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold transition shadow"
+            title="Official phpMyAdmin website"
+          >
+            <span>Official Portal</span>
+            <ExternalLink className="w-3.5 h-3.5 text-white" />
+          </a>
+          <a
+            href={`https://${networkTelemetry.publicIp || '168.220.248.86'}/phpmyadmin/`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-full text-xs font-black transition shadow"
+            title="Open phpMyAdmin directory endpoint in new tab"
+          >
+            <span>Direct phpMyAdmin</span>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-900" />
+          </a>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to uninstall phpMyAdmin from VPS?')) {
+                uninstallPhpMyAdmin();
+                if (onClose) onClose();
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/80 hover:bg-rose-600 text-white rounded-full text-xs font-bold transition shadow"
+            title="Uninstall phpMyAdmin suite from VPS"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-white" />
+            <span>Uninstall</span>
+          </button>
+          {onClose && (
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition"
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
         {/* Secondary Subnav */}
         <div className="px-5 py-2.5 bg-amber-50/80 border-b border-amber-100 flex flex-wrap items-center justify-between gap-3 text-xs flex-shrink-0">
@@ -523,21 +523,35 @@ export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }>
           )}
         </div>
 
-        {/* Modal Footer */}
+        {/* Footer */}
         <div className="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between flex-shrink-0 text-xs text-slate-500">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-slate-700">HostAdmin phpMyAdmin Suite</span>
+            <span className="font-semibold text-slate-700">HostAdmin phpMyAdmin Suite v5.2.2</span>
             <span>•</span>
             <span className="text-emerald-600 font-bold">● FastCGI Buffer Active</span>
           </div>
-          <button
-            onClick={onClose}
-            className="ha-btn ha-btn-white py-1.5 px-4 text-xs font-bold"
-          >
-            Close phpMyAdmin
-          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="ha-btn ha-btn-white py-1.5 px-4 text-xs font-bold"
+            >
+              Close phpMyAdmin
+            </button>
+          )}
         </div>
-      </motion.div>
+    </div>
+  );
+};
+
+export const PhpMyAdminModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
+  isOpen,
+  onClose,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+      <PhpMyAdminSection isModal={true} onClose={onClose} />
     </div>
   );
 };
