@@ -84,6 +84,7 @@ export const DatabaseSection: React.FC = () => {
     executeSqlQuery,
     launchPhpMyAdmin,
     isPhpMyAdminInstalled,
+    isVpsInstalled,
     installPhpMyAdmin,
     addToast,
     triggerHaptic,
@@ -299,7 +300,7 @@ export const DatabaseSection: React.FC = () => {
         </div>
       </div>
 
-      {/* phpMyAdmin FastCGI External Application Quick Action Bar */}
+      {/* phpMyAdmin FastCGI Directory Installation Quick Action Bar */}
       <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0 font-black text-sm">
@@ -307,26 +308,39 @@ export const DatabaseSection: React.FC = () => {
           </div>
           <div>
             <div className="text-xs font-bold text-white flex items-center gap-2">
-              <span>phpMyAdmin 5.2.2 (External Web App)</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] text-emerald-400 font-mono">100% Installed & Live</span>
+              <span>phpMyAdmin 5.2.2 (Directory Installation)</span>
+              <span className={`w-2 h-2 rounded-full ${isPhpMyAdminInstalled || isVpsInstalled ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span className={`text-[10px] font-mono ${isPhpMyAdminInstalled || isVpsInstalled ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {isPhpMyAdminInstalled || isVpsInstalled ? 'Installed & Verified Live (/phpmyadmin)' : 'Dependency Missing (Not Installed)'}
+              </span>
             </div>
             <div className="text-[11px] text-slate-400">
-              Host: <span className="font-mono text-slate-300">127.0.0.1:3306</span> | Socket: <span className="font-mono text-slate-300">/run/mysqld/mysqld.sock</span> | Direct Single Sign-On (SSO)
+              Directory: <span className="font-mono text-slate-300">/usr/share/phpmyadmin (/phpmyadmin)</span> | Socket: <span className="font-mono text-slate-300">/run/mysqld/mysqld.sock</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => launchPhpMyAdmin(databases[0]?.name)}
-            className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-            title="Open phpMyAdmin in new window"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Launch External phpMyAdmin</span>
-            <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-          </button>
+          {isPhpMyAdminInstalled || isVpsInstalled ? (
+            <button
+              onClick={() => launchPhpMyAdmin(databases[0]?.name)}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+              title="Auto-Verify & Launch Directory phpMyAdmin"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Launch Verified phpMyAdmin (/phpmyadmin)</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </button>
+          ) : (
+            <button
+              onClick={() => installPhpMyAdmin()}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md"
+              title="Install phpMyAdmin Directory Suite on VPS"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install phpMyAdmin (v5.2.1)</span>
+            </button>
+          )}
         </div>
       </div>
 

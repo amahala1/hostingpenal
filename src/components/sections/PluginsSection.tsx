@@ -48,15 +48,15 @@ export const PluginsSection: React.FC = () => {
 
     if (lowerName.includes('phpmyadmin')) {
       return {
-        url: `https://${ip}:8443/phpmyadmin`,
-        label: 'Open phpMyAdmin',
+        url: `https://${ip}/phpmyadmin/`,
+        label: 'Open phpMyAdmin (/phpmyadmin)',
         action: () => launchPhpMyAdmin(),
       };
     }
     if (lowerName.includes('roundcube') || lowerName.includes('webmail')) {
       return {
-        url: `https://${ip}:8443/roundcube`,
-        label: 'Open Webmail',
+        url: `https://${ip}/roundcube/`,
+        label: 'Open Webmail (/roundcube)',
         action: () => setActiveSection('roundcube'),
       };
     }
