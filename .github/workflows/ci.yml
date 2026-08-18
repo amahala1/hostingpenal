@@ -12,7 +12,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm install
       - run: npm run lint
       - run: npm run build
@@ -20,3 +19,7 @@ jobs:
       - run: node --check server/auth.js
       - run: node --check server/config.js
       - run: node --check server/dns.js
+      - run: node --check server/provisioning.js
+      - run: node --check server/cpanel-flow.js
+      - run: node --check server/services/integrations.js
+      - run: node --check server/services/integration-install.js
