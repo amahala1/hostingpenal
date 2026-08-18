@@ -1,0 +1,39 @@
+:root {
+  --ha-bg: #f5f7fb;
+  --ha-surface: #ffffff;
+  --ha-surface-soft: #f8fafc;
+  --ha-border: #e6eaf0;
+  --ha-text: #172033;
+  --ha-muted: #6b7280;
+  --ha-primary: #6d28d9;
+  --ha-primary-soft: #f3e8ff;
+  --ha-accent: #f59e0b;
+  --ha-success: #059669;
+  --ha-danger: #dc2626;
+  --ha-radius: 18px;
+  --ha-shadow: 0 10px 30px rgba(15, 23, 42, .07);
+}
+
+.ha-page { color: var(--ha-text); }
+.ha-page-title { color: var(--ha-text); font-size: 1.45rem; font-weight: 700; letter-spacing: -.02em; }
+.ha-page-subtitle { color: var(--ha-muted); font-size: .78rem; margin-top: .3rem; }
+.ha-card { background: var(--ha-surface); border: 1px solid var(--ha-border); border-radius: var(--ha-radius); box-shadow: var(--ha-shadow); }
+.ha-card-soft { background: var(--ha-surface-soft); border: 1px solid var(--ha-border); border-radius: 14px; }
+.ha-action { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:12px; padding:.65rem .9rem; font-size:.78rem; font-weight:650; transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.ha-action:hover { transform:translateY(-1px); }
+.ha-action-primary { color:#fff; background:var(--ha-primary); box-shadow:0 8px 18px rgba(109,40,217,.22); }
+.ha-action-primary:hover { background:#5b21b6; }
+.ha-action-secondary { color:var(--ha-text); background:#fff; border:1px solid var(--ha-border); }
+.ha-action-secondary:hover { background:var(--ha-surface-soft); }
+.ha-input { width:100%; border:1px solid var(--ha-border); background:#fff; color:var(--ha-text); border-radius:12px; padding:.7rem .8rem; outline:none; transition:border-color .18s, box-shadow .18s; }
+.ha-input:focus { border-color:rgba(109,40,217,.55); box-shadow:0 0 0 3px rgba(109,40,217,.10); }
+.ha-status { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.28rem .55rem; font-size:.68rem; font-weight:700; }
+.ha-status-success { color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; }
+.ha-status-warning { color:#b45309; background:#fffbeb; border:1px solid #fde68a; }
+.ha-status-danger { color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; }
+.ha-status-neutral { color:#475569; background:#f1f5f9; border:1px solid #e2e8f0; }
+
+@media (max-width: 768px) {
+  .ha-card { border-radius:14px; }
+  .ha-page-title { font-size:1.2rem; }
+}
