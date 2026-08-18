@@ -106,7 +106,11 @@ app.post('/api/integrations/:name/install', requireAuth, async (req, res) => {
   try {
     const execute = req.body?.execute === true;
     if (execute && req.user.username !== config.masterUsername) return res.status(403).json({ success: false, message: 'Super Administrator required' });
-    const result = await installIntegration(req.params.name, { execute, configure: req.body?.configure !== false });
+    const result = await installIntegration(req.params.name, {
+      execute,
+      configure: req.body?.configure !== false,
+      tls: req.body?.tls === true,
+    });
     res.json(result);
   } catch (error) {
     console.error('integration install error', error);
