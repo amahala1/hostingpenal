@@ -1,0 +1,76 @@
+name: Hosting E2E
+
+on:
+  push:
+    branches: [rebuild/hostingpenal-v2]
+  pull_request:
+    branches: [rebuild/hostingpenal-v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hosting-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate Nginx configuration generator
+        run: |
+          node --input-type=module <<'NODE'
+          process.env.MASTER_USERNAME = 'superadmin'
+          process.env.MASTER_PASSWORD_HASH = 'test-hash'
+          process.env.SESSION_SECRET = 'hostingpenal-test-session-secret'
+          const { renderNginxServerBlock, getDocumentRoot } = await import('./server/provisioning.js')
+          const config = renderNginxServerBlock({ domain: 'example.com', username: 'sitindia', phpSocket: '/run/php/php8.3-fpm.sock' })
+          if (!config.includes('server_name example.com www.example.com;')) process.exit(1)
+          if (!config.includes('root /home/sitindia/public_html/example.com;')) process.exit(1)
+          if (!config.includes('fastcgi_pass unix:/run/php/php8.3-fpm.sock;')) process.exit(1)
+          if (getDocumentRoot('sitindia', 'example.com') !== '/home/sitindia/public_html/example.com') process.exit(1)
+          console.log('Nginx provisioning contract: PASS')
+          NODE
+
+      - name: Validate DNS module contract
+        run: |
+          node --input-type=module <<'NODE'
+          process.env.MASTER_USERNAME = 'superadmin'
+          process.env.MASTER_PASSWORD_HASH = 'test-hash'
+          process.env.SESSION_SECRET = 'hostingpenal-test-session-secret'
+          process.env.BIND_ZONE_DIR = '/tmp/hostingpenal-zones'
+          const { writeZone } = await import('./server/dns.js')
+          if (typeof writeZone !== 'function') process.exit(1)
+          console.log('DNS module contract: PASS')
+          NODE
+
+      - name: Start API
+        env:
+          MASTER_USERNAME: superadmin
+          MASTER_PASSWORD_HASH: test-hash
+          SESSION_SECRET: hostingpenal-test-session-secret
+          PORT: 4000
+        run: |
+          node server/server.js >/tmp/hostingpenal-api.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4000/api/health >/dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:4000/api/health >/dev/null
+
+      - name: Run staging API smoke
+        env:
+          BASE_URL: http://127.0.0.1:4000
+        run: bash scripts/staging-smoke.sh
+
+      - name: Validate hosting configuration syntax
+        run: |
+          node --check server/server.js
+          node --check server/config.js
+          node --check server/provisioning.js
+          node --check server/dns.js
+          echo 'Server configuration syntax: PASS'
