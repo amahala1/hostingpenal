@@ -3,7 +3,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { config } from './config.js';
-import { writeZone } from './dns.js';
+import { writeZone, upsertZoneRecord } from './dns.js';
 
 const execFileAsync = promisify(execFile);
 const domainPattern = /^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;
@@ -83,7 +83,7 @@ export async function provisionSubdomain({ subdomain, parentDomain, username, ph
   await fs.rm(nginxEnabledPath, { force: true }); await fs.symlink(nginxPath, nginxEnabledPath); await reloadNginx();
   const target = dnsTarget || (dnsType === 'CNAME' ? `${parentDomain}.` : serverIp);
   if (!target) throw new Error('DNS target is required');
-  const dns = await writeZone(parentDomain, [{ name: prefix, type: dnsType, value: target, ttl: 3600 }]);
+  const dns = await upsertZoneRecord(parentDomain, { name: prefix, type: dnsType, value: target, ttl: 3600 });
   const ssl = issueSsl ? await issueLetsEncrypt(domain) : { status: 'not-requested' };
   return { domain, parentDomain, username, documentRoot, nginxPath, dnsType, dnsTarget: target, enabled: true, dns: { status: 'active', ...dns }, ssl };
 }

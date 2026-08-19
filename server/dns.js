@@ -39,10 +39,46 @@ function renderRecord(record, domain) {
   return `${owner} ${ttl} IN ${record.type} ${priority}${value}`;
 }
 
+function zoneDeclaration(domain) {
+  const zonePath = path.join(config.bindZoneDir, `db.${domain}`);
+  return `zone "${domain}" {\n  type master;\n  file "${zonePath}";\n};`;
+}
+
+async function ensureZoneDeclaration(domain) {
+  const localPath = '/etc/bind/named.conf.local';
+  let content;
+  try {
+    content = await fs.readFile(localPath, 'utf8');
+  } catch (error) {
+    throw new Error(`Unable to read BIND local configuration: ${error?.message || error}`);
+  }
+
+  const declaration = zoneDeclaration(domain);
+  const escapedDomain = domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const zonePattern = new RegExp(`\\bzone\\s+"${escapedDomain}"\\s*\\{`, 'i');
+  if (!zonePattern.test(content)) {
+    const separator = content.endsWith('\n') ? '' : '\n';
+    await fs.writeFile(localPath, `${content}${separator}\n${declaration}\n`, 'utf8');
+  }
+}
+
+async function reloadBind() {
+  await execFileAsync('named-checkconf');
+  await execFileAsync('rndc', ['reload']);
+}
+
+function nextSerial(existingContent) {
+  const match = existingContent.match(/@\s+IN\s+SOA[\s\S]*?\(\s*(\d+)/i);
+  const current = match ? Number(match[1]) : 0;
+  return Math.max(Math.floor(Date.now() / 1000), current + 1);
+}
+
 export async function writeZone(domain, records) {
   validateDomain(domain);
   records.forEach(validateRecord);
-  await fs.mkdir(config.bindZoneDir, { recursive: true, mode: 0o755 });
+  await fs.mkdir(config.bindZoneDir, { recursive: true, mode: 0o775 });
+  await ensureZoneDeclaration(domain);
+
   const serial = Math.floor(Date.now() / 1000);
   const lines = [
     `$TTL 300`,
@@ -55,10 +91,39 @@ export async function writeZone(domain, records) {
     '',
   ];
   const zonePath = path.join(config.bindZoneDir, `db.${domain}`);
-  await fs.writeFile(zonePath, lines.join('\n'), { mode: 0o640 });
+  await fs.writeFile(zonePath, lines.join('\n'), { mode: 0o644 });
   await execFileAsync('named-checkzone', [domain, zonePath]);
-  await execFileAsync('rndc', ['reload', domain]);
+  await reloadBind();
   return { zonePath, serial };
+}
+
+export async function upsertZoneRecord(domain, record) {
+  validateDomain(domain);
+  validateRecord(record);
+  const zonePath = path.join(config.bindZoneDir, `db.${domain}`);
+  let content;
+  try {
+    content = await fs.readFile(zonePath, 'utf8');
+  } catch {
+    throw new Error(`DNS zone does not exist for ${domain}`);
+  }
+
+  const rendered = renderRecord(record, domain);
+  const normalized = rendered.replace(/\s+/g, ' ').trim();
+  const exists = content.split('\n').some((line) => line.replace(/\s+/g, ' ').trim() === normalized);
+
+  if (!exists) {
+    const serial = nextSerial(content);
+    const serialPattern = /(@\s+IN\s+SOA[\s\S]*?\(\s*)\d+/i;
+    content = content.replace(serialPattern, `$1${serial}`);
+    content = `${content.trimEnd()}\n${rendered}\n`;
+    await fs.writeFile(zonePath, content, { mode: 0o644 });
+  }
+
+  await ensureZoneDeclaration(domain);
+  await execFileAsync('named-checkzone', [domain, zonePath]);
+  await reloadBind();
+  return { zonePath, added: !exists };
 }
 
 export async function readZone(domain) {
