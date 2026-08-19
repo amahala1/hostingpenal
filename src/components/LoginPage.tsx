@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Lock, User, ArrowRight, ShieldCheck, AlertCircle, Database, Mail, Zap } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { hostingApi } from '../api/client';
 
 export const LoginPage: React.FC = () => {
-  const { login, masterAccount } = useApp();
-  const [username, setUsername] = useState(masterAccount?.username || 'superadmin');
+  const [username, setUsername] = useState('superadmin');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,10 +16,15 @@ export const LoginPage: React.FC = () => {
       setErrorMsg('Please enter your username and password.');
       return;
     }
+
     setErrorMsg('');
     setIsLoading(true);
     try {
-      await login(username.trim(), password);
+      await hostingApi.login(username.trim(), password);
+      localStorage.setItem('hostadmin_auth', 'true');
+      localStorage.setItem('hostadmin_username', username.trim());
+      if (!rememberMe) localStorage.removeItem('hostadmin_username');
+      window.location.reload();
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : 'Authentication failed.');
     } finally {
