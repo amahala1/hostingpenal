@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 process.env.MASTER_USERNAME ||= 'superadmin';
 process.env.MASTER_PASSWORD_HASH ||= 'test-hash';
+process.env.SESSION_SECRET ||= 'hostingpenal-test-session-secret';
 
 const { getDocumentRoot, renderNginxServerBlock } = await import('./provisioning.js');
 
