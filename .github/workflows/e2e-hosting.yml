@@ -31,11 +31,7 @@ jobs:
           process.env.MASTER_PASSWORD_HASH = 'test-hash'
           process.env.SESSION_SECRET = 'hostingpenal-test-session-secret'
           const { renderNginxServerBlock, getDocumentRoot } = await import('./server/provisioning.js')
-          const config = renderNginxServerBlock({
-            domain: 'example.com',
-            username: 'sitindia',
-            phpSocket: '/run/php/php8.3-fpm.sock'
-          })
+          const config = renderNginxServerBlock({ domain: 'example.com', username: 'sitindia', phpSocket: '/run/php/php8.3-fpm.sock' })
           if (!config.includes('server_name example.com www.example.com;')) process.exit(1)
           if (!config.includes('root /home/sitindia/public_html/example.com;')) process.exit(1)
           if (!config.includes('fastcgi_pass unix:/run/php/php8.3-fpm.sock;')) process.exit(1)
@@ -43,7 +39,7 @@ jobs:
           console.log('Nginx provisioning contract: PASS')
           NODE
 
-      - name: Validate DNS zone renderer
+      - name: Validate DNS module contract
         run: |
           node --input-type=module <<'NODE'
           process.env.MASTER_USERNAME = 'superadmin'
@@ -51,16 +47,25 @@ jobs:
           process.env.SESSION_SECRET = 'hostingpenal-test-session-secret'
           process.env.BIND_ZONE_DIR = '/tmp/hostingpenal-zones'
           const { writeZone } = await import('./server/dns.js')
-          const fs = await import('node:fs/promises')
-          await fs.rm('/tmp/hostingpenal-zones', { recursive: true, force: true })
-          console.log('DNS zone module loaded successfully')
-          console.log(typeof writeZone === 'function' ? 'DNS contract: PASS' : 'DNS contract: FAIL')
+          if (typeof writeZone !== 'function') process.exit(1)
+          console.log('DNS module contract: PASS')
           NODE
 
-      - name: Validate PHP-FPM socket contract
+      - name: Start API
+        env:
+          MASTER_USERNAME: superadmin
+          MASTER_PASSWORD_HASH: test-hash
+          SESSION_SECRET: hostingpenal-test-session-secret
+          PORT: 4000
         run: |
-          test -n '/run/php/php8.3-fpm.sock'
-          echo 'PHP-FPM socket contract: PASS'
+          node server/server.js >/tmp/hostingpenal-api.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4000/api/health >/dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:4000/api/health >/dev/null
+
+      - name: Run staging API smoke
+        env:
+          BASE_URL: http://127.0.0.1:4000
+        run: bash scripts/staging-smoke.sh
 
       - name: Validate hosting configuration syntax
         run: |
