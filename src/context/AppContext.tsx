@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { hostingApi } from '../api/client';
+import type { AuthUser } from '../api/authTypes';
 import {
   NavSection,
   ThemeMode,
@@ -90,6 +92,7 @@ export interface SecuritySettings {
 interface AppContextType {
   // Authentication & Session
   isAuthenticated: boolean;
+  isAuthRestoring: boolean;
   login: (username?: string, password?: string) => boolean;
   logout: () => void;
 
@@ -343,9 +346,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('hostadmin_auth') !== 'false';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthRestoring, setIsAuthRestoring] = useState<boolean>(true);
 
   // Navigation & Panel Mode Switcher
   const [activeSection, setActiveSection] = useState<NavSection>('websites');
@@ -372,6 +374,93 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Save serverUsers
   useEffect(() => {
     localStorage.setItem('hostadmin_server_users', JSON.stringify(serverUsers));
+  }, [serverUsers]);
+
+  const applyAuthenticatedUser = (user?: AuthUser | null) => {
+    const inputUser = (user?.username || 'superadmin').trim();
+    const lowerUser = inputUser.toLowerCase();
+    const role = user?.role || 'Super Administrator';
+    const normalizedRole = role.toLowerCase();
+
+    setIsAuthenticated(true);
+
+    if (normalizedRole.includes('reseller') || lowerUser.includes('reseller')) {
+      setUserProfile((prev) => ({
+        ...prev,
+        username: inputUser,
+        name: user?.name || 'Reseller Hosting Console',
+        role: 'Reseller',
+      }));
+      setPanelMode('admin');
+      setActiveSection('users-manager');
+      return;
+    }
+
+    if (normalizedRole.includes('site') || normalizedRole.includes('user')) {
+      setUserProfile((prev) => ({
+        ...prev,
+        username: inputUser,
+        name: user?.name || `User Account (${inputUser})`,
+        role: role || 'Site Admin',
+      }));
+
+      const matchedUser = serverUsers.find((u) => u.username.toLowerCase() === lowerUser);
+      if (matchedUser) {
+        setActiveUserAccount(matchedUser);
+        setSelectedDomain(matchedUser.domain);
+      }
+
+      setPanelMode('user');
+      setActiveSection('user-panel');
+      return;
+    }
+
+    setUserProfile((prev) => ({
+      ...prev,
+      username: inputUser,
+      name: user?.name || 'Master Super Administrator',
+      role,
+    }));
+    setPanelMode('admin');
+    setActiveSection('overview');
+  };
+
+  const clearAuthenticatedUser = () => {
+    setIsAuthenticated(false);
+    setPanelMode('admin');
+    setActiveUserAccount(null);
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const restoreSession = async () => {
+      setIsAuthRestoring(true);
+      try {
+        const response = await hostingApi.me();
+        if (active && response.success && response.user) {
+          applyAuthenticatedUser(response.user);
+        } else if (active) {
+          clearAuthenticatedUser();
+        }
+      } catch {
+        if (active) clearAuthenticatedUser();
+      } finally {
+        if (active) setIsAuthRestoring(false);
+      }
+    };
+
+    const handleAuthExpired = () => {
+      clearAuthenticatedUser();
+    };
+
+    window.addEventListener('hostadmin:auth-expired', handleAuthExpired);
+    restoreSession();
+
+    return () => {
+      active = false;
+      window.removeEventListener('hostadmin:auth-expired', handleAuthExpired);
+    };
   }, [serverUsers]);
 
   // VPS Network & Live Hardware Telemetry
@@ -837,66 +926,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Auth Functions
   const login = (username?: string, password?: string): boolean => {
-    setIsAuthenticated(true);
-    localStorage.setItem('hostadmin_auth', 'true');
-
     const inputUser = (username || 'superadmin').trim();
-    const lowerUser = inputUser.toLowerCase();
+    applyAuthenticatedUser({ username: inputUser, role: 'Super Administrator' });
 
-    // Hierarchy check: Master Admin -> Reseller -> User
-    if (lowerUser === 'superadmin' || lowerUser === 'admin' || lowerUser === masterAccount?.username?.toLowerCase()) {
-      setUserProfile((prev) => ({
-        ...prev,
-        username: inputUser,
-        name: 'Master Super Administrator',
-        role: 'Super Administrator',
-      }));
-      setPanelMode('admin');
-      setActiveSection('overview');
-
-      addToast({
-        type: 'success',
-        title: 'Master Administrator Control Panel',
-        message: `Signed in as Super Administrator '${inputUser}'. Full Server Control active.`,
-      });
-    } else if (lowerUser.includes('reseller')) {
-      setUserProfile((prev) => ({
-        ...prev,
-        username: inputUser,
-        name: 'Reseller Hosting Console',
-        role: 'Reseller',
-      }));
-      setPanelMode('admin');
-      setActiveSection('users-manager');
-
-      addToast({
-        type: 'success',
-        title: 'Reseller Portal Authenticated',
-        message: `Signed in as Reseller '${inputUser}'. Scope: Hosting Package Creation & Tenant Account Management.`,
-      });
-    } else {
-      setUserProfile((prev) => ({
-        ...prev,
-        username: inputUser,
-        name: `User Account (${inputUser})`,
-        role: 'Site Admin',
-      }));
-
-      const matchedUser = serverUsers.find((u) => u.username.toLowerCase() === lowerUser);
-      if (matchedUser) {
-        setActiveUserAccount(matchedUser);
-        setSelectedDomain(matchedUser.domain);
-      }
-
-      setPanelMode('user');
-      setActiveSection('user-panel');
-
-      addToast({
-        type: 'success',
-        title: 'User Control Panel Signed In',
-        message: `Signed in as User '${inputUser}'. Accessing cPanel web hosting tools.`,
-      });
-    }
+    addToast({
+      type: 'success',
+      title: 'Master Administrator Control Panel',
+      message: `Signed in as Super Administrator '${inputUser}'. Full Server Control active.`,
+    });
 
     addAuditLog({
       action: 'User Session Authenticated',
@@ -908,8 +945,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.setItem('hostadmin_auth', 'false');
+    clearAuthenticatedUser();
+    hostingApi.logout().catch(() => {
+      // The backend session source of truth will be checked again on the next page load.
+    });
     addToast({
       type: 'info',
       title: 'Signed Out',
@@ -1008,7 +1047,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     setIsAuthenticated(false);
-    localStorage.setItem('hostadmin_auth', 'false');
 
     addAuditLog({
       action: `Master ID '${masterData.username}' Created & Mock Models Purged`,
@@ -1036,7 +1074,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.removeItem('hostadmin_files');
     localStorage.removeItem('hostadmin_ftp_accounts');
     localStorage.removeItem('hostadmin_server_users');
-    localStorage.setItem('hostadmin_auth', 'false');
     setIsAuthenticated(false);
 
     setDomains([]);
@@ -1168,7 +1205,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Force sign-in requirement after VPS setup
     setIsAuthenticated(false);
-    localStorage.setItem('hostadmin_auth', 'false');
 
     addAuditLog({
       action: 'Automated 1-Click VPS Stack Provisioned & Demos Purged',
@@ -2630,6 +2666,7 @@ class PHPMailer {
     <AppContext.Provider
       value={{
         isAuthenticated,
+        isAuthRestoring,
         login,
         logout,
 

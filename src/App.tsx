@@ -32,8 +32,18 @@ import './styles/modern-ui.css';
 import './styles/modern-ui-domain.css';
 
 const MainContent: React.FC = () => {
-  const { isAuthenticated, activeSection, vpsInstallerModalOpen, setVpsInstallerModalOpen, fontSize } = useApp();
+  const { isAuthenticated, isAuthRestoring, activeSection, vpsInstallerModalOpen, setVpsInstallerModalOpen, fontSize } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
+  if (isAuthRestoring) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FD] text-slate-700">
+        <div className="flex items-center gap-3 text-sm font-semibold">
+          <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+          Restoring secure session...
+        </div>
+      </div>
+    );
+  }
   if (!isAuthenticated) return <LoginPage />;
   const renderActiveSection = () => {
     switch (activeSection) {

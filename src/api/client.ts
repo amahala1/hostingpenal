@@ -1,6 +1,8 @@
+import type { AuthResponse } from './authTypes';
+
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-async function request(path: string, options: RequestInit = {}) {
+async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
@@ -9,10 +11,13 @@ async function request(path: string, options: RequestInit = {}) {
   const contentType = response.headers.get('content-type') || '';
   const data = contentType.includes('application/json') ? await response.json() : await response.text();
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent('hostadmin:auth-expired'));
+    }
     const message = typeof data === 'object' && data !== null && 'message' in data ? String(data.message) : `API request failed (${response.status})`;
     throw new Error(message);
   }
-  return data;
+  return data as T;
 }
 
 export interface DomainProvisionResult {
@@ -34,11 +39,23 @@ export interface SubdomainProvisionResult extends DomainProvisionResult {
   dnsTarget: string;
 }
 
+export interface DnsZoneUpdateResult {
+  success: boolean;
+  serial?: string | number;
+  message?: string;
+}
+
+export interface DnsResolveResult {
+  success: boolean;
+  answers?: string[];
+  message?: string;
+}
+
 export const hostingApi = {
   health: () => request('/api/health'),
-  login: (username: string, password: string) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  logout: () => request('/api/auth/logout', { method: 'POST' }),
-  me: () => request('/api/auth/me'),
+  login: (username: string, password: string) => request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  logout: () => request<AuthResponse>('/api/auth/logout', { method: 'POST' }),
+  me: () => request<AuthResponse>('/api/auth/me'),
   provisionDomain: (input: { domain: string; username: string; phpSocket?: string; serverIp?: string; issueSsl?: boolean }) =>
     request('/api/domains/provision', { method: 'POST', body: JSON.stringify(input) }) as Promise<DomainProvisionResult>,
   provisionSubdomain: (input: { prefix: string; parentDomain: string; username: string; phpSocket?: string; serverIp?: string; recordType?: 'A' | 'CNAME'; target?: string; issueSsl?: boolean }) =>
@@ -55,7 +72,7 @@ export const hostingApi = {
         issueSsl: input.issueSsl,
       }),
     }) as Promise<SubdomainProvisionResult>,
-  updateDnsZone: (domain: string, records: unknown[]) => request('/api/dns/zones', { method: 'POST', body: JSON.stringify({ domain, records }) }),
-  getDnsZone: (domain: string) => request(`/api/dns/zones/${encodeURIComponent(domain)}`),
-  resolveDns: (domain: string, type = 'A') => request(`/api/dns/resolve?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`),
+  updateDnsZone: (domain: string, records: unknown[]) => request<DnsZoneUpdateResult>('/api/dns/zones', { method: 'POST', body: JSON.stringify({ domain, records }) }),
+  getDnsZone: (domain: string) => request<string>(`/api/dns/zones/${encodeURIComponent(domain)}`),
+  resolveDns: (domain: string, type = 'A') => request<DnsResolveResult>(`/api/dns/resolve?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`),
 };
