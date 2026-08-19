@@ -14,6 +14,8 @@ export const config = {
   sessionTtlMs: Number(process.env.SESSION_TTL_MS || 1000 * 60 * 60 * 8),
   masterUsername: required('MASTER_USERNAME'),
   masterPasswordHash: required('MASTER_PASSWORD_HASH'),
+  serverPublicIp: process.env.SERVER_PUBLIC_IP || '',
+  serverHostname: process.env.SERVER_HOSTNAME || 'server1.sitindia.in',
   bindZoneDir: process.env.BIND_ZONE_DIR || '/etc/bind/zones',
   bindReloadCommand: process.env.BIND_RELOAD_COMMAND || 'rndc reload',
   hostingHome: process.env.HOSTING_HOME || '/home',
