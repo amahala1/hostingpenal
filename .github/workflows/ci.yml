@@ -19,8 +19,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run lint
       - run: npm run build
+      - run: npm test
       - run: node --check server/server.js
-      - run: node --check server/auth.js
       - run: node --check server/config.js
       - run: node --check server/provisioning.js
       - run: node --check server/dns.js
