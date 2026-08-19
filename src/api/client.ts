@@ -17,11 +17,13 @@ async function request(path: string, options: RequestInit = {}) {
 
 export interface DomainProvisionResult {
   success: boolean;
+  message?: string;
   domain: string;
   username: string;
   documentRoot: string;
   nginxPath?: string;
   enabled: boolean;
+  nginx?: { status: string; path?: string };
   dns?: { status: string; zoneFile?: string };
   ssl?: { status: string; message?: string };
 }
@@ -37,8 +39,22 @@ export const hostingApi = {
   login: (username: string, password: string) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   me: () => request('/api/auth/me'),
-  provisionDomain: (domain: string, username: string, phpSocket?: string, options: { serverIp?: string; issueSsl?: boolean } = {}) => request('/api/domains/provision', { method: 'POST', body: JSON.stringify({ domain, username, phpSocket, ...options }) }) as Promise<DomainProvisionResult>,
-  provisionSubdomain: (subdomain: string, parentDomain: string, username: string, options: { phpSocket?: string; serverIp?: string; dnsType?: 'A' | 'CNAME'; dnsTarget?: string; issueSsl?: boolean } = {}) => request('/api/domains/subdomain/provision', { method: 'POST', body: JSON.stringify({ subdomain, parentDomain, username, ...options }) }) as Promise<SubdomainProvisionResult>,
+  provisionDomain: (input: { domain: string; username: string; phpSocket?: string; serverIp?: string; issueSsl?: boolean }) =>
+    request('/api/domains/provision', { method: 'POST', body: JSON.stringify(input) }) as Promise<DomainProvisionResult>,
+  provisionSubdomain: (input: { prefix: string; parentDomain: string; username: string; phpSocket?: string; serverIp?: string; recordType?: 'A' | 'CNAME'; target?: string; issueSsl?: boolean }) =>
+    request('/api/domains/subdomain/provision', {
+      method: 'POST',
+      body: JSON.stringify({
+        subdomain: input.prefix,
+        parentDomain: input.parentDomain,
+        username: input.username,
+        phpSocket: input.phpSocket,
+        serverIp: input.serverIp,
+        dnsType: input.recordType,
+        dnsTarget: input.target,
+        issueSsl: input.issueSsl,
+      }),
+    }) as Promise<SubdomainProvisionResult>,
   updateDnsZone: (domain: string, records: unknown[]) => request('/api/dns/zones', { method: 'POST', body: JSON.stringify({ domain, records }) }),
   getDnsZone: (domain: string) => request(`/api/dns/zones/${encodeURIComponent(domain)}`),
   resolveDns: (domain: string, type = 'A') => request(`/api/dns/resolve?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(type)}`),
