@@ -9,7 +9,6 @@ import { VpsInstallerModal } from './components/modals/VpsInstallerModal';
 import { LiveSshTerminalModal } from './components/modals/LiveSshTerminalModal';
 import { RoundcubeWebmailSection } from './components/sections/RoundcubeWebmailSection';
 import { PhpMyAdminSection } from './components/sections/PhpMyAdminModal';
-
 import { DashboardOverview } from './components/sections/DashboardOverview';
 import { WebsitesSection } from './components/sections/WebsitesSection';
 import { FileManagerSection } from './components/sections/FileManagerSection';
@@ -29,22 +28,13 @@ import { WebsiteHostingWorkspace } from './components/sections/WebsiteHostingWor
 import { UserPanelSection } from './components/sections/UserPanelSection';
 import { UserManagementSection } from './components/sections/UserManagementSection';
 import { ResellerPortalSection } from './components/sections/ResellerPortalSection';
+import './styles/modern-ui.css';
+import './styles/modern-ui-domain.css';
 
 const MainContent: React.FC = () => {
-  const {
-    isAuthenticated,
-    activeSection,
-    vpsInstallerModalOpen,
-    setVpsInstallerModalOpen,
-    fontSize,
-  } = useApp();
-
+  const { isAuthenticated, activeSection, vpsInstallerModalOpen, setVpsInstallerModalOpen, fontSize } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
+  if (!isAuthenticated) return <LoginPage />;
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'overview': return <WebsiteHostingWorkspace />;
@@ -73,7 +63,6 @@ const MainContent: React.FC = () => {
       default: return <WebsitesSection />;
     }
   };
-
   const getFontSizeClass = () => {
     switch (fontSize) {
       case 'sm': return 'text-sm';
@@ -82,13 +71,12 @@ const MainContent: React.FC = () => {
       default: return 'text-base';
     }
   };
-
   return (
-    <div className={`min-h-screen bg-[#F8F9FD] text-slate-900 ${getFontSizeClass()} flex antialiased`}>
+    <div className={`min-h-screen bg-[#F5F7FB] text-slate-900 ${getFontSizeClass()} flex antialiased ha-app-shell`}>
       <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-72 transition-all duration-300">
         <Header onToggleMobileSidebar={() => setMobileOpen(!mobileOpen)} />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto ha-main-content">
           {renderActiveSection()}
         </main>
       </div>
@@ -101,10 +89,4 @@ const MainContent: React.FC = () => {
   );
 };
 
-export default function App() {
-  return (
-    <AppProvider>
-      <MainContent />
-    </AppProvider>
-  );
-}
+export default function App() { return <AppProvider><MainContent /></AppProvider>; }

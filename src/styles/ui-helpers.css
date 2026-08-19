@@ -1,0 +1,8 @@
+.ha-domain-table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; }
+.ha-domain-table th { text-align:left; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#64748b; background:#f8fafc; padding:.75rem .85rem; border-bottom:1px solid #e6eaf0; }
+.ha-domain-table td { padding:.85rem; border-bottom:1px solid #eef1f5; vertical-align:middle; }
+.ha-domain-table tr:last-child td { border-bottom:0; }
+.ha-domain-table tr:hover td { background:#fafbff; }
+.ha-domain-icon { width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:11px; background:#f3e8ff; color:#6d28d9; }
+.ha-muted { color:#64748b; }
+.ha-mono { font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }

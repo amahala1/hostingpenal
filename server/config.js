@@ -19,6 +19,8 @@ export const config = {
   bindZoneDir: process.env.BIND_ZONE_DIR || '/etc/bind/zones',
   bindReloadCommand: process.env.BIND_RELOAD_COMMAND || 'rndc reload',
   hostingHome: process.env.HOSTING_HOME || '/home',
+  hostingUsername: process.env.HOSTING_DEFAULT_USERNAME || 'sitindia',
+  serverPublicIp: process.env.SERVER_PUBLIC_IP || '',
   nginxSitesAvailable: process.env.NGINX_SITES_AVAILABLE || '/etc/nginx/sites-available',
   nginxSitesEnabled: process.env.NGINX_SITES_ENABLED || '/etc/nginx/sites-enabled',
   nginxBinary: process.env.NGINX_BINARY || 'nginx',
