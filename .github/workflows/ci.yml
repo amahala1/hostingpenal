@@ -22,8 +22,8 @@ jobs:
       - run: node --check server/server.js
       - run: node --check server/auth.js
       - run: node --check server/config.js
-      - run: node --check server/dns.js
       - run: node --check server/provisioning.js
+      - run: node --check server/dns.js
       - run: node --check server/cpanel-flow.js
       - run: node --check server/services/integrations.js
       - run: node --check server/services/integration-install.js
