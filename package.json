@@ -1,8 +1,11 @@
 {
-  "name": "react-example",
+  "name": "hostingpenal",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "api": "node server/server.js",
@@ -11,7 +14,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "node --test server/auth.test.js server/provisioning.test.js"
+    "test": "node --test server/auth.test.js server/provisioning.test.js server/dns-rollback.test.js"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
